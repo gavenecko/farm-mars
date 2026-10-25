@@ -2,6 +2,7 @@
 const SEASONS=['Dust','Bloom','Frost','Storm'],SOLS_PER_SEASON=7;
 const SEASON_TINT={Dust:'rgba(255,150,60,.07)',Bloom:'rgba(255,90,170,.06)',Frost:'rgba(120,200,255,.10)',Storm:'rgba(150,60,30,.12)'};
 // crop: seed price, days to grow, regrow days, seasons, sell value, color, shape
+const FISH={carp:{n:'Dome Carp',v:60,c:'#e8a050',zone:.34,spd:1.6},eel:{n:'Glass Eel',v:130,c:'#9ef',zone:.22,spd:2.4},koi:{n:'Crimson Koi',v:280,c:'#f34',zone:.14,spd:3.2}};
 const CROPS={
  pot:{n:'Red Potato',p:20,days:3,v:45,s:[0,1],c:'#c8502e',c2:'#7a2a18',shape:'root'},
  let:{n:'Dust Lettuce',p:15,days:2,v:30,s:[0,3],c:'#86d65a',c2:'#3f8a2a',shape:'leaf'},
@@ -27,11 +28,12 @@ const ITEMS={hoe:{n:'Hoe',tool:1,c:'#c96'},can:{n:'Water Can',tool:1,c:'#6cf'},p
  spr:{n:'Sprinkler',v:50,c:'#9ab',place:1,d:'Waters 4 adjacent tiles each morning.'},qspr:{n:'Quality Sprinkler',v:150,c:'#adf',place:1,d:'Waters all 8 surrounding tiles.'},
  pendant:{n:'Red Pendant',v:0,c:'#f33',p:500,d:'Give to someone at 10 hearts to propose.'},bouquet:{n:'Dome Bouquet',v:0,c:'#f9c',p:200,d:'Gift at 8+ hearts to start dating.'},
 };
+ITEMS.rod={n:'Fishing Rod',tool:1,c:'#da6'};for(const k in FISH)ITEMS[k]={n:FISH[k].n,v:FISH[k].v,c:FISH[k].c,food:Math.round(FISH[k].v/4),fish:1,d:'Caught in the dome reservoir.'};ITEMS.grill={n:'Grilled Carp',v:150,c:'#c84',food:60,d:'Smoky and filling.'};
 for(const k in CROPS){const c=CROPS[k];ITEMS[k]={n:c.n,v:c.v,c:c.c,food:Math.round(c.v/3),crop:1,d:'Season: '+c.s.map(i=>SEASONS[i]).join(', ')};ITEMS['s_'+k]={n:c.n+' Seeds',seed:k,p:c.p,c:c.c,d:'Grows in '+c.days+' sols. '+c.s.map(i=>SEASONS[i]).join('/')+'.'}}
 const RECIPES=[
  {id:'spr',in:{iron:5,crys:1}},{id:'qspr',in:{iron:8,cob:3,crys:2}},
  {id:'o2can',in:{iron:2,glowcap:1}},{id:'medkit',in:{lily:1,chit:2}},
- {id:'stew',in:{glowcap:2,pot:1},cook:1},{id:'salad',in:{let:2,tom:1},cook:1},{id:'pie',in:{mel:1,wht:2},cook:1},
+ {id:'stew',in:{glowcap:2,pot:1},cook:1},{id:'salad',in:{let:2,tom:1},cook:1},{id:'pie',in:{mel:1,wht:2},cook:1},{id:'grill',in:{carp:1,wht:1},cook:1},
 ];
 // tool upgrades [credits, materials]
 const UPG=[null,null,{cr:500,in:{iron:10}},{cr:1500,in:{cob:6,crys:4}}];
@@ -63,7 +65,7 @@ const NPCS=[
   lines:[["Dr. Elena Ruiz, colony botanist. Martian flora is extraordinary. Bring me samples!"],["Dust Lilies bloom only in crater shadows. Fascinating chemistry."],["Your soil work is genuinely helping the colony's food security."],["You could co-author my next paper. I mean it."]],
   season:{Frost:"Frostbloom only sprouts in the cold. Try planting some!"},
   ev:{3:["DR. RUIZ: I sequenced that Glowcap you brought. It has six genomes. Six!","She hugs her tablet like a child."],6:["DR. RUIZ: My first garden on Mars died in a week. I almost went home.","DR. RUIZ: Seeing your farm thrive... you make this colony believe."]}},
- {id:'mo',n:'Old Mo',look:{skin:'#a0704a',hair:'#dddddd',style:'beard',top:'#a65a2a',pants:'#3a3a2a',acc:'#ff0'},likes:['iron','chit','pot','stew','core'],hates:['let'],
+ {id:'mo',n:'Old Mo',look:{skin:'#a0704a',hair:'#dddddd',style:'beard',top:'#a65a2a',pants:'#3a3a2a',acc:'#ff0'},likes:['iron','chit','pot','stew','core','carp','grill'],hates:['let'],
   sched:[[6,'home',0,0],[7,'city',17,14],[10,'cafe',12,5],[13,'city',17,14],[18,'shop',3,5],[21,'home',0,0]],
   lines:[["Back in '78 we mined with our bare gloves. Name's Mo."],["Crystal bugs hate a quick swing. Hit 'em and step back."],["Ferrite's the backbone of Cydonia. Keep it coming, kid."],["You remind me of me. Don't tell anyone I said that."]],
   season:{Storm:"Storm season. The mine's safer than the surface now. Ironic, huh?"},

@@ -48,6 +48,7 @@ function update(){tick++;if(toastT)toastT--;if(swingT)swingT--;if(invT)invT--;fo
  if(menu)return;
  if(tick%300==0){G.time+=10;if(G.time>=1560){if(G.zone=='surf'||G.zone=='mine')G.money=Math.max(0,G.money-Math.min(500,Math.floor(G.money*.1)));sleep(true);return}}
  const hr=Math.floor(G.time/60);if(hr!=lastHour){lastHour=hr;placeNPCs(false)}
+ if(FISHING){updFish();G.moving=false;if(!FISHING)return;if(Math.hypot(joy.dx||0,joy.dy||0)>.6||keys.arrowleft||keys.arrowright||keys.arrowup||keys.arrowdown){FISHING=null;toast('Stopped fishing')}return}
  // movement
  let dx=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),dy=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);
  if(joy.on&&Math.hypot(joy.dx,joy.dy)>.2){dx=joy.dx;dy=joy.dy}const mv=Math.hypot(dx,dy);G.moving=mv>0&&!swingT;
@@ -55,10 +56,14 @@ function update(){tick++;if(toastT)toastT--;if(swingT)swingT--;if(invT)invT--;fo
   const fx=dx>0?5:-5;if(!solidAt(G.px+dx+fx,G.py-3)&&!solidAt(G.px+dx+fx,G.py))G.px+=dx;const fy=dy>0?1:-4;if(!solidAt(G.px-4,G.py+dy+fy)&&!solidAt(G.px+4,G.py+dy+fy))G.py+=dy;anim+=.12*Math.min(1,mv)}
  triggers();
  // npcs
- for(const id in npcRT){const n=npcRT[id];if(n.zone!=G.zone)continue;if(!n.tx||Math.random()<.006){n.tx=n.hx+(Math.random()-.5)*40;n.ty=n.hy+(Math.random()-.5)*28}
-  const a=n.tx-n.x,b=n.ty-n.y;n.mv=false;if(Math.hypot(a,b)>2&&!(modal)){const sx=Math.sign(a)*.45,sy=Math.sign(b)*.45;if(!solidAt(n.x+sx*12,n.y))n.x+=sx,n.mv=true;else n.tx=n.x;if(!solidAt(n.x,n.y+sy*8))n.y+=sy,n.mv=true;else n.ty=n.y;if(n.mv){n.dir=Math.abs(a)>Math.abs(b)?(a>0?1:3):(b>0?2:0);n.f=(n.f||0)+.1}}}
+ for(const id in npcRT){const n=npcRT[id];if(n.zone!=G.zone)continue;n.mv=false;
+  if((!n.path||!n.path.length)&&Math.random()<.008){const gx=Math.floor(n.hx/T)+Math.round((Math.random()-.5)*5),gy=Math.floor(n.hy/T)+Math.round((Math.random()-.5)*3);n.path=npcPath(Math.floor(n.x/T),Math.floor(n.y/T),gx,gy)}
+  if(n.path&&n.path.length&&!modal){const[tx,ty]=n.path[0],a=tx*T+8-n.x,b=ty*T+8-n.y,d=Math.hypot(a,b);if(d<.6){n.x=tx*T+8;n.y=ty*T+8;n.path.shift()}else{const s=Math.min(.45,d);n.x+=a/d*s;n.y+=b/d*s;n.mv=true;n.dir=Math.abs(a)>Math.abs(b)?(a>0?1:3):(b>0?2:0);n.f=(n.f||0)+.1}}}
  if(G.zone=='farm'){if(Math.random()<.006){robot.tx=(10+Math.random()*18)*T;robot.ty=(8+Math.random()*10)*T}robot.x+=Math.sign(robot.tx-robot.x)*.5;robot.y+=Math.sign(robot.ty-robot.y)*.5}
  if(G.zone=='surf'||G.zone=='mine')hostile();}
+function npcPath(sx,sy,gx,gy){const m=curMap(),w=m[0].length,h=m.length,ok=(x,y)=>x>0&&y>0&&x<w-1&&y<h-1&&!isSolid(G.zone,m[y][x])&&!'XDMuvP'.includes(m[y][x])&&!(G.zone=='farm'&&G.objs[x+','+y]);
+ if(!ok(gx,gy))return null;const prev={},q=[[sx,sy]];prev[sx+','+sy]=null;let n=0;while(q.length&&n++<900){const[x,y]=q.shift();if(x==gx&&y==gy){const p=[];let k=x+','+y;while(k&&k!=sx+','+sy){p.unshift(k.split(',').map(Number));k=prev[k]}return p}
+  for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const k=(x+a)+','+(y+b);if(!(k in prev)&&ok(x+a,y+b)){prev[k]=x+','+y;q.push([x+a,y+b])}}}return null}
 function triggers(){const tx=Math.floor(G.px/T),ty=Math.floor((G.py-2)/T),t=tileAt(tx,ty),z=G.zone;
  if(t=='X'){if(z=='farm'&&tx>=30)enter('city',1,10,1);else if(z=='farm')enter('surf',31,41,0);else if(z=='city')enter('farm',29,10,3);else enter('farm',15,1,2)}
  if(t=='D'){if(EXITS[z]){const e=EXITS[z];enter(e[0],e[1],e[2],2)}else{const d=DOORS[z+':'+tx+','+ty];if(d)enter(d[0],d[1],d[2],0)}}
@@ -117,9 +122,15 @@ function draw(){const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=
  D.sort((a,b)=>a[0]-b[0]).forEach(d=>d[1]());
  PR.forEach(p=>{R(p.x-ox-2,p.y-oy-2,4,4,p.c);R(p.x-ox-1,p.y-oy-1,2,2,'#fff');light(p.x-ox,p.y-oy,10,p.c)});
  P.forEach(p=>R(p.x-ox,p.y-oy,2,2,p.c));
- overlays(ox,oy);lighting(ox,oy);
+ overlays(ox,oy);lighting(ox,oy);if(G.zone=='city'&&isFestival()&&G.time>=480&&G.time<1000)festival(ox,oy);if(FISHING)drawFish(ox,oy);
  FT.forEach(f=>txt(f.s,f.x-ox,f.y-oy,f.c,7,'center'));
  hud();if(menu)drawMenu();if(modal)drawModal()}
+function festival(ox,oy){for(let r=0;r<3;r++){const y=(7+r*4)*T-oy;cx.strokeStyle='#ffd27a88';cx.beginPath();cx.moveTo(2*T-ox,y);for(let x=2;x<=29;x++)cx.lineTo(x*T-ox,y+Math.sin(x)*4);cx.stroke();
+ for(let x=2;x<=29;x++){const c=['#f4f','#0ff','#ff4','#f84'][(x+r+Math.floor(tick/20))%4];R(x*T-ox-1,y+Math.sin(x)*4,3,3,c)}}panel(W/2-70,26,140,13,'#3a0a3acc','#ff4');txt("★ FOUNDERS' FESTIVAL ★",W/2,36,'#ffd27a',8,'center')}
+function drawFish(ox,oy){const f=FISHING,d=DIRV[G.dir],bx=G.px+d[0]*20-ox,by=G.py-4+d[1]*20-oy+(f.ph=='bite'?Math.sin(tick)*2:Math.sin(tick/10));
+ cx.strokeStyle='#fff8';cx.beginPath();cx.moveTo(G.px-ox+d[0]*8,G.py-oy-14);cx.lineTo(bx,by);cx.stroke();R(bx-2,by-2,4,4,'#f44');R(bx-2,by-2,4,1,'#fff');
+ if(f.ph=='bite')txt('!',G.px-ox,G.py-oy-30,'#ff0',14,'center');
+ if(f.ph=='reel'){const x=W/2-80,y=50;panel(x-4,y-14,168,30,'#000c','#9ef');txt('Press USE in the green zone!',W/2,y-4,'#fff',7,'center');R(x,y,160,10,'#422');R(x+f.zs*160,y,FISH[f.k].zone*160,10,'#3c6');R(x+f.pos*160-1,y-2,3,14,'#fff')}}
 function drawSwing(X,Y){const id=swingId,p=1-swingT/14,d=G.dir,base=[-Math.PI/2,0,Math.PI/2,Math.PI][d],a=base-1.2+p*2.4;
  cx.save();cx.translate(X+8,Y+16);cx.rotate(a+Math.PI/2);drawIcon(cx,id,-8,-18);cx.restore();
  if(id=='blade'){cx.strokeStyle='rgba(255,120,255,'+(.7*(1-p))+')';cx.lineWidth=3;cx.beginPath();cx.arc(X+8,Y+16,15,base-1.2,a);cx.stroke()}}
@@ -186,8 +197,8 @@ function lighting(ox,oy){const z=G.zone,hr=G.time/60;let dark=hr<19?0:Math.min(.
  cx.globalCompositeOperation='lighter';for(const l of LIGHTS){if(!l.c)continue;const g=cx.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r*.7);g.addColorStop(0,hexA(l.c,.18+dark*.25));g.addColorStop(1,hexA(l.c,0));cx.fillStyle=g;cx.fillRect(l.x-l.r,l.y-l.r,l.r*2,l.r*2)}cx.globalCompositeOperation='source-over'}
 function hexA(h,a){let c=h.replace('#','');if(c.length==3)c=c.split('').map(q=>q+q).join('');const n=parseInt(c.slice(0,6),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`}
 function bar(x,y,v,mx,c,l){R(x,y,56,7,'#000');R(x+1,y+1,54,5,'#2a1a2a');R(x+1,y+1,54*Math.max(0,v)/mx,5,c);R(x+1,y+1,54*Math.max(0,v)/mx,1,'#fff5');txt(l,x+59,y+7,'#fff',7)}
-function aLabel(){const s=cur(),[fx,fy]=facingTile();if(G.zone=='farm'&&mature(G.tiles[fx+','+fy]))return 'HARVEST';if(!s)return 'USE';const it=ITEMS[s[0]];
- if(it.food||it.use)return 'EAT';if(it.seed)return 'PLANT';if(it.place)return 'PLACE';return{hoe:'TILL',can:'WATER',pick:'MINE',blade:'ATTACK'}[s[0]]||'USE'}
+function aLabel(){if(FISHING)return FISHING.ph=='reel'?'REEL!':FISHING.ph=='bite'?'HOOK!':'WAIT';const s=cur(),[fx,fy]=facingTile();if(G.zone=='farm'&&mature(G.tiles[fx+','+fy]))return 'HARVEST';if(!s)return 'USE';const it=ITEMS[s[0]];
+ if(it.food||it.use)return 'EAT';if(it.seed)return 'PLANT';if(it.place)return 'PLACE';return{rod:'FISH',hoe:'TILL',can:'WATER',pick:'MINE',blade:'ATTACK'}[s[0]]||'USE'}
 function hud(){const z=G.zone;panel(3,3,124,z=='surf'||z=='mine'?47:38,'#0a0612d8','#ffb050');
  const h=Math.floor(G.time/60)%24,mm=G.time%60,ic=G.time<1140?'☀':'☾';txt(`${season()} ${solOfSeason()} · Y${year()}`,7,12,'#ffd27a',8);txt(ic+' '+String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'),123,12,'#fff',8,'right');
  bar(7,16,G.energy,G.maxEn,'#fc3','EN');bar(7,25,G.hp,100,'#f44','HP');txt(G.money+'cr',123,32,'#7f7',8,'right');
@@ -196,7 +207,7 @@ function hud(){const z=G.zone;panel(3,3,124,z=='surf'||z=='mine'?47:38,'#0a0612d
  const boss=ENTS.find(e=>e.t=='queen');if(boss){R(W/2-80,18,160,8,'#000');R(W/2-79,19,158*boss.hp/boss.max,6,'#4df');txt('CRYSTAL QUEEN',W/2,32,'#bff',7,'center')}
  R(W-46,3,43,19,'#ff6aa8');R(W-45,4,41,17,'#1a0a24');txt('MENU',W-24.5,16,'#fff',8,'center');
  for(let i=0;i<10;i++){const X=HB.x+i*HB.s,Y=HB.y;R(X,Y,HB.s-1,HB.s-1,i==G.sel?'#ffd27a':'#000c');R(X+1,Y+1,HB.s-3,HB.s-3,i==G.sel?'#4a2a3a':'#2a1a2acc');const s=G.inv[i];if(s){drawIcon(cx,s[0],X+2,Y+2);const it=ITEMS[s[0]];if(it.tool&&G.tools[s[0]]>1)R(X+2,Y+2,3,3,['','','#c96','#46f'][G.tools[s[0]]]);if(!it.tool)txt(s[1],X+HB.s-2,Y+HB.s-2,'#fff',7,'right')}}
- const s=cur();if(s)txt(ITEMS[s[0]].n+(ITEMS[s[0]].tool?' ('+TOOL_TIER_NAMES[G.tools[s[0]]]+')':''),HB.x+105,HB.y-4,'#fff',7,'center');
+ const s=cur();if(s)txt(ITEMS[s[0]].n+(G.tools[s[0]]?' ('+TOOL_TIER_NAMES[G.tools[s[0]]]+')':''),HB.x+105,HB.y-4,'#fff',7,'center');
  if(joy.on){cx.globalAlpha=.35;cx.fillStyle='#fff';cx.beginPath();cx.arc(joy.ox,joy.oy,26,0,6.3);cx.fill();cx.globalAlpha=.75;cx.beginPath();cx.arc(joy.ox+joy.dx*26,joy.oy+joy.dy*26,11,0,6.3);cx.fill();cx.globalAlpha=1}
  else if(touchUI){cx.globalAlpha=.3;cx.strokeStyle='#fff';cx.lineWidth=2;cx.beginPath();cx.arc(46,H-70,26,0,6.3);cx.stroke();cx.globalAlpha=1;txt('MOVE',46,H-67,'#fff8',7,'center')}
  if(touchUI){const lab={A:aLabel(),B:nearNPC()?'TALK':'ACT'};for(const k in BTN){const b=BTN[k];cx.globalAlpha=btnFx[k]?.95:.6;cx.fillStyle=k=='A'?'#e8603a':'#3aa8cc';cx.beginPath();cx.arc(b.x,b.y,b.r,0,6.3);cx.fill();cx.strokeStyle='#fff';cx.lineWidth=1.5;cx.stroke();cx.globalAlpha=1;txt(lab[k],b.x,b.y+3,'#fff',lab[k].length>5?7:8,'center')}}
@@ -212,7 +223,7 @@ function drawMenu(){panel(12,8,W-24,H-16,'#120818f4','#ffb050');TABS.forEach((t,
  panel(W-38,12,24,20,'#4a1a2a','#f66');txt('X',W-26,26,'#fff',9,'center');
  if(menu.tab=='bag'){for(let i=0;i<30;i++){const X=(W-240)/2+(i%10)*24,Y=44+Math.floor(i/10)*24;R(X,Y,22,22,menu.pick==i?'#0ff':i<10?'#7a5a3a':'#4a3a4a');R(X+1,Y+1,20,20,'#241626');if(i==G.sel)R(X+1,Y+20,20,1,'#ffd27a');const s=G.inv[i];if(s){drawIcon(cx,s[0],X+3,Y+3);if(!ITEMS[s[0]].tool)txt(s[1],X+21,Y+21,'#fff',7,'right')}}
   txt('Top row = hotbar. Tap an item, then tap another slot to move/swap.',W/2,124,'#aaa',7,'center');const s=G.inv[menu.pick!=null?menu.pick:G.sel];
-  if(s){const it=ITEMS[s[0]];txt(it.n+(it.tool?' - '+TOOL_TIER_NAMES[G.tools[s[0]]]+' tier':''),24,140,'#ffd27a',8);wrapLines(it.d||(it.tool?'A trusty tool. Upgrade at Supply & Tech.':''),W-60,7).forEach((l,i)=>txt(l,24,151+i*9,'#ddd',7));if(it.v)txt('Sells for '+it.v+'cr'+(it.food?'  ·  +'+it.food+' energy':''),24,172,'#7f7',7)}
+  if(s){const it=ITEMS[s[0]];txt(it.n+(G.tools[s[0]]?' - '+TOOL_TIER_NAMES[G.tools[s[0]]]+' tier':''),24,140,'#ffd27a',8);wrapLines(it.d||(it.tool?'A trusty tool. Upgrade at Supply & Tech.':''),W-60,7).forEach((l,i)=>txt(l,24,151+i*9,'#ddd',7));if(it.v)txt('Sells for '+it.v+'cr'+(it.food?'  ·  +'+it.food+' energy':''),24,172,'#7f7',7)}
   txt(`Harvested ${G.stats.harvest} · Mined ${G.stats.mined} · Bugs ${G.stats.bugs} · Deepest floor ${G.deep}`,W/2,H-20,'#9ab',7,'center')}
  if(menu.tab=='craft'){RECIPES.forEach((r,i)=>{const Y=40+i*18,ok=hasAll(r.in)&&(!r.cook||G.zone=='home');panel(24,Y,W-48,16,ok?'#1a3a2a':'#1a0e24',ok?'#6c6':'#5a4a5a');drawIcon(cx,r.id,27,Y);
   txt(ITEMS[r.id].n+(r.cook?' (kitchen)':''),46,Y+11,ok?'#bfb':'#bbb',8);txt(Object.entries(r.in).map(([k,q])=>cnt(k)+'/'+q+' '+ITEMS[k].n).join('  '),W-28,Y+11,'#ddd',7,'right')});txt('Tap a recipe to craft. Cooking works at your home kitchen.',W/2,H-18,'#aaa',7,'center')}

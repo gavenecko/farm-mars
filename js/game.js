@@ -4,14 +4,14 @@ const PLOOK={skin:'#f0c090',hair:'#8a3a1a',style:'cap',top:'#2a8a6a',pants:'#3a3
 let G,ENTS=[],SURF=null,MINE=null,PR=[],P=[],FT=[],tick=0,anim=0,swingT=0,swingId=null,invT=0,npcRT={},robot={x:15*T,y:12*T,tx:15*T,ty:12*T};
 const DIRV=[[0,-1],[1,0],[0,1],[-1,0]];
 function newGame(){return{v:2,day:1,time:360,money:400,energy:100,maxEn:100,hp:100,o2:100,zone:'farm',px:12*T+8,py:9*T+8,dir:2,sel:0,
- inv:[['hoe',1],['can',1],['pick',1],['blade',1],['s_pot',6],['s_let',6],['s_wht',4],null,null,null].concat(Array(20).fill(null)),
+ inv:[['hoe',1],['can',1],['pick',1],['blade',1],['s_pot',6],['s_let',6],['s_wht',4],['rod',1],null,null].concat(Array(20).fill(null)),
  tools:{hoe:1,can:1,pick:1,blade:1},tiles:{},objs:{},ship:[],hearts:{ava:0,kai:0,ruiz:0,mo:0},talked:{},gifted:{},events:{},dating:{},spouse:null,wedDay:0,
  bundles:{},deep:0,bossDead:0,floor:0,music:true,sfx:true,stats:{harvest:0,mined:0,bugs:0}}}
 function migrate(o){const g=newGame();g.day=o.day||1;g.money=o.money||0;g.hearts=Object.assign(g.hearts,o.hearts||{});g.spouse=o.spouse||null;if(g.spouse){g.dating[g.spouse]=1;g.hearts[g.spouse]=10}
  for(const k in o.tiles||{}){const t=o.tiles[k];g.tiles[k]={w:t.w||0,c:t.c&&CROPS[t.c]?t.c:null,g:t.g||0,dry:0}}
- let i=7;for(const s of o.inv||[])if(s&&ITEMS[s[0]]&&!ITEMS[s[0]].tool&&i<30)g.inv[i++]=[s[0],s[1]];return g}
+ let i=8;for(const s of o.inv||[])if(s&&ITEMS[s[0]]&&!ITEMS[s[0]].tool&&i<30)g.inv[i++]=[s[0],s[1]];return g}
 function save(quiet){try{localStorage.setItem('farmmars2',JSON.stringify(G));if(!quiet)toast('Game saved')}catch(e){}}
-function load(){try{const s=JSON.parse(localStorage.getItem('farmmars2'));if(s&&s.v==2){const n=newGame();for(const k in n)if(s[k]===undefined)s[k]=n[k];while(s.inv.length<30)s.inv.push(null);return s}}catch(e){}
+function load(){try{const s=JSON.parse(localStorage.getItem('farmmars2'));if(s&&s.v==2){const n=newGame();for(const k in n)if(s[k]===undefined)s[k]=n[k];while(s.inv.length<30)s.inv.push(null);if(!s.inv.some(q=>q&&q[0]=='rod')){const i=s.inv.findIndex(q=>!q);if(i>=0)s.inv[i]=['rod',1]}return s}}catch(e){}
  try{const o=JSON.parse(localStorage.getItem('farmmars1'));if(o&&o.day){const g=migrate(o);g.migrated=1;return g}}catch(e){}return null}
 const season=(d=G.day)=>SEASONS[Math.floor((d-1)/SOLS_PER_SEASON)%4],seasonIdx=(d=G.day)=>Math.floor((d-1)/SOLS_PER_SEASON)%4,year=()=>1+Math.floor((G.day-1)/(SOLS_PER_SEASON*4)),solOfSeason=()=>(G.day-1)%SOLS_PER_SEASON+1;
 // ---------- inventory ----------
@@ -52,11 +52,19 @@ function targetTiles(tool){const[fx,fy]=facingTile(),d=DIRV[G.dir],tier=G.tools[
 const mature=t=>t&&t.c&&t.g>=CROPS[t.c].days;
 function harvest(k){const t=G.tiles[k],c=t.c;if(!add(c))return false;const[x,y]=k.split(',').map(Number);parts(x*T+8,y*T+8,CROPS[c].c,10);floatTxt(x*T+8,y*T,'+'+CROPS[c].n,'#bfa');sfx('harvest');G.stats.harvest++;
  if(CROPS[c].re){t.g=CROPS[c].days-CROPS[c].re}else{t.c=null;t.g=0}return true}
-function act(){if(swingT>4)return;const s=cur();const[fx,fy]=facingTile(),k=fx+','+fy;
+let FISHING=null;
+function startFish(){FISHING={ph:'wait',t:0,bite:60+Math.random()*120};sfx('water');toast('Casting... wait for a bite, then press USE')}
+function fishAct(){const f=FISHING;if(f.ph=='wait'){FISHING=null;toast('Reeled in too early');return}
+ if(f.ph=='bite'){const r=Math.random(),k=r<.12?'koi':r<.4?'eel':'carp';f.ph='reel';f.k=k;f.pos=0;f.dir=1;f.zs=Math.random()*(1-FISH[k].zone);sfx('menu');return}
+ if(f.ph=='reel'){const ok=f.pos>=f.zs&&f.pos<=f.zs+FISH[f.k].zone;FISHING=null;if(ok&&add(f.k)){sfx('harvest');G.stats.fish=(G.stats.fish||0)+1;floatTxt(G.px,G.py-24,'Caught '+FISH[f.k].n+'!','#9ef')}else{sfx('bad');toast('It got away!')}}}
+function updFish(){const f=FISHING;f.t++;if(f.ph=='wait'&&f.t>f.bite){f.ph='bite';f.t=0;sfx('clink')}if(f.ph=='bite'&&f.t>50){FISHING=null;toast('It got away!');sfx('bad')}
+ if(f.ph=='reel'){f.pos+=f.dir*FISH[f.k].spd/100;if(f.pos>1||f.pos<0){f.dir*=-1;f.pos=Math.max(0,Math.min(1,f.pos))}}}
+function act(){if(FISHING){fishAct();return}if(swingT>4)return;const s=cur();const[fx,fy]=facingTile(),k=fx+','+fy;
  if(G.zone=='farm'&&mature(G.tiles[k])){harvest(k);return}
  if(!s){interact();return}const id=s[0],it=ITEMS[id];
  if(it.food||it.use){consume();return}
  if(G.zone=='farm'){
+  if(id=='rod'){if(tileAt(fx,fy)=='P'){if(useEnergy(2)){swing('rod');startFish()}}else toast('Face the reservoir to fish');return}
   if(it.place){if(tileAt(fx,fy)=='g'&&!G.tiles[k]&&!G.objs[k]){G.objs[k]=id;take(G.sel);sfx('plant');toast('Placed '+it.n)}else sfx('bad');return}
   if(it.seed){const t=G.tiles[k];if(t&&!t.c){if(!CROPS[it.seed].s.includes(seasonIdx())){toast(CROPS[it.seed].n+" won't grow in "+season()+' season');sfx('bad');return}t.c=it.seed;t.g=0;t.dry=0;take(G.sel);sfx('plant');parts(fx*T+8,fy*T+10,'#7a4a2a',4)}return}
   if(id=='hoe'||id=='can'){const tl=targetTiles(id);if(!useEnergy(id=='hoe'?1+tl.length:Math.ceil(tl.length/2)))return;swing(id);
@@ -99,6 +107,7 @@ function interact(){const n=nearNPC();if(n){talk(n);return}
  if(z=='cafe'&&(t=='c'||t=='s')){cafeMenu();return}
  if(z=='shop'&&(t=='c'||t=='s'||t=='h')){shopMenu();return}
  if(z=='cc'){if(t=='q'){bundleMenu();return}if(t=='j'){openMenu('craft');return}}
+ if(z=='city'&&t=='F'&&isFestival()&&!G.feast){G.feast=G.day;G.energy=G.maxEn;add('pie');sfx('wed');say('Founders\' Festival Feast','The colony shares a feast around the fountain. You eat your fill (energy restored) and take home a Moonmelon Pie!');return}
  if(z=='city'){if(t=='F')say('Fountain','Recycled colony water. A plaque reads "New Cydonia, est. 2079".'+(Object.keys(G.bundles).length>=2?' The restored lights dance in rainbow colors.':''));if(t=='A')say('Habitat Row','Residential pods. The neighbors are asleep. Probably.');if(t=='S')say('Bench','You sit for a moment and watch the neon flicker.')}
  if(z=='surf'&&t=='O')say('Alien Obelisk','Ancient glyphs glow beneath the dust. Nobody knows who built these.')}
 // menus as dialog options
@@ -122,7 +131,8 @@ function craft(r){if(r.cook&&G.zone!='home'){toast('Cook at your home kitchen');
 function bundleMenu(){const o=BUNDLES.map((b,i)=>({t:(G.bundles[i]?'[DONE] ':'')+b.n+': '+Object.entries(b.in).map(([k,q])=>cnt(k)+'/'+q+' '+ITEMS[k].n).join(', '),f:()=>{if(G.bundles[i]){bundleMenu();return}if(hasAll(b.in)){for(const[k,q]of Object.entries(b.in))rem(k,q);G.bundles[i]=1;G.money+=b.r;sfx('wed');say('Community Center',b.n+' complete! +'+b.r+'cr. The colony cheers!'+(Object.keys(G.bundles).length==BUNDLES.length?' ALL BUNDLES DONE - New Cydonia is thriving thanks to you!':''))}else{toast('Missing items');sfx('bad');bundleMenu()}}}));
  o.push({t:'Leave'});say('Community Board','Help the colony grow. Rewards in credits.',o)}
 // ---------- NPCs ----------
-function schedFor(n,h){if(G.spouse==n.id){return h<9||h>=21?['home',7,3]:h<17?['farm',9,8]:['home',3,4]}let e=n.sched[0];for(const s of n.sched)if(h>=s[0])e=s;return[e[1],e[2],e[3]]}
+const isFestival=()=>solOfSeason()==SOLS_PER_SEASON;
+function schedFor(n,h){if(isFestival()&&h>=9&&h<16&&G.spouse!=n.id){const sp={ava:[12,13],kai:[19,9],ruiz:[22,12],mo:[17,13]}[n.id];return['city',sp[0],sp[1]]}if(G.spouse==n.id){return h<9||h>=21?['home',7,3]:h<17?['farm',9,8]:['home',3,4]}let e=n.sched[0];for(const s of n.sched)if(h>=s[0])e=s;return[e[1],e[2],e[3]]}
 function placeNPCs(snap){const h=Math.floor(G.time/60);for(const n of NPCS){const[z,x,y]=schedFor(n,h);let r=npcRT[n.id];if(!r)r=npcRT[n.id]={x:x*T+8,y:y*T+8,dir:2,f:0,zone:z};
  if(r.zone!=z||snap&&r.zone!=G.zone){r.zone=z;r.x=x*T+8;r.y=y*T+8}r.hx=x*T+8;r.hy=y*T+8;if(r.zone=='home'&&G.spouse!=n.id)r.zone='away'}}
 function heartsCap(n){return n.mar&&!G.dating[n.id]&&G.spouse!=n.id?8:10}
@@ -133,7 +143,7 @@ function talk(n){const r=npcRT[n.id];r.dir=Math.abs(G.px-r.x)>Math.abs(G.py-r.y)
  const opts=[{t:'Chat',f:()=>chat(n)}];const s=cur();if(s&&!ITEMS[s[0]].tool)opts.push({t:'Give '+ITEMS[s[0]].n,f:()=>gift(n)});opts.push({t:'Bye'});
  const greet=G.spouse==n.id?['Hey, love.','There you are! I missed you.','Welcome home, farmer.'][G.day%3]:h<2?'Oh, hello.':h<5?'Hey, good to see you!':h<8?'Hi! I was hoping you\'d come by.':'*smiles brightly* Hi you.';
  say(n.n,greet,opts,n.look)}
-function chat(n){const key=n.id+G.day,first=!G.talked[key];if(first){G.talked[key]=1;addHearts(n,.4)}
+function chat(n){const key=n.id+G.day,first=!G.talked[key];if(first&&isFestival()&&npcRT[n.id].zone=='city'&&Math.floor(G.time/60)>=9&&Math.floor(G.time/60)<16){G.talked[key]=1;addHearts(n,1.4);sfx('heart');say(n.n,['Happy Founders\' Festival! The whole colony is out tonight.',['Dance with me later?','Try the festival feast at the fountain!','Seventeen years since the first dome. Look how far we came.'][G.day%3]],null,n.look);return}if(first){G.talked[key]=1;addHearts(n,.4)}
  let l;if(G.spouse==n.id){l=[["Morning! I watered a few crops for you.","Don't overdo it on the surface, okay?"],["I love our little dome life.","Remember our wedding? The whole plaza glowed."],["Let's watch Phobos rise tonight.","You're the best thing that happened to me on Mars."]][G.day%3];if(first){G.energy=Math.min(G.maxEn,G.energy+15);sfx('heart')}}
  else{const tier=Math.min(3,Math.floor(G.hearts[n.id]/2.5)),ls=n.lines[tier];l=[ls[G.day%ls.length]];if(n.season&&n.season[season()]&&G.day%2)l.push(n.season[season()])}
  say(n.n,l,null,n.look)}
@@ -159,4 +169,4 @@ function sleep(passed){sfx('sleep');let earn=0;for(const[i,q]of G.ship)earn+=ITE
  const pg=[(passed?'You collapsed from exhaustion and a drone carried you home. ':'')+'Sol '+G.day+' - '+season()+' season, Year '+year()+'.','Shipping earned '+earn+'cr. '+(grew?grew+' crops grew. ':'')+(r?'R0-V3R watered '+r+'. ':'')+(sp?'Sprinklers watered '+sp+'. ':'')];
  if(wilted||died)pg.push((wilted?wilted+' crops are wilting - water them! ':'')+(died?died+' crops withered away.':''));
  if(ns!=oldS)pg.push('A new season begins: '+season()+'!'+(killed?' '+killed+' out-of-season crops died.':'')+' New seeds are at Supply & Tech.');
- if(spouseMsg)pg.push(spouseMsg);say('Good morning',pg)}
+ if(spouseMsg)pg.push(spouseMsg);if(isFestival())pg.push("Today is the Founders' Festival! Join everyone in the New Cydonia plaza from 9:00 to 16:00.");G.feast=0;say('Good morning',pg)}
