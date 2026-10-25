@@ -80,10 +80,12 @@ function drawCrop(g,X,Y,c,st,wilt){const C=CROPS[c],L=wilt?'#8a6a3a':'#5bbf3a',D
 function drawIcon(g,id,X,Y){const it=ITEMS[id],c=it.c;
  if(id=='hoe'){px(g,X+3,Y+4,2,10,'#8a5a3a');ob(g,X+3,Y+2,8,3,c)}else if(id=='can'){ob(g,X+3,Y+6,8,7,c);px(g,X+11,Y+5,3,2,c);ob(g,X+4,Y+3,5,2,'#48a')}
  else if(id=='rod'){g.strokeStyle='#ddd';g.beginPath();g.moveTo(X+13,Y+2);g.lineTo(X+13,Y+12);g.stroke();px(g,X+2,Y+12,3,3,'#555');for(let i=0;i<11;i++)px(g,X+3+i,Y+12-i,1,2,'#c8964a');px(g,X+12,Y+12,3,2,'#f44')}
+ else if(id=='lance'){for(let i=0;i<12;i++)px(g,X+2+i,Y+13-i,2,2,i>8?'#6ff':'#889');px(g,X+12,Y+1,3,3,'#fff')}else if(id=='hammer'){px(g,X+7,Y+5,2,10,'#8a5a3a');ob(g,X+2,Y+1,12,6,'#fa4');px(g,X+3,Y+2,10,1,'#fff8');px(g,X+7,Y+3,2,2,'#40f')}
+ else if(id=='egg'){ob(g,X+5,Y+4,6,9,'#f4ead8');px(g,X+6,Y+5,2,3,'#fff')}else if(id=='milk'){ob(g,X+5,Y+3,6,11,'#f8f0ff');px(g,X+5,Y+3,6,2,'#c44');px(g,X+6,Y+7,4,4,'#fcd')}
  else if(id=='pick'){px(g,X+7,Y+3,2,11,'#8a5a3a');ob(g,X+2,Y+2,12,2,c);px(g,X+1,Y+4,2,2,c);px(g,X+13,Y+4,2,2,c)}else if(id=='blade'){ob(g,X+7,Y+1,3,9,c);px(g,X+8,Y+2,1,7,'#fff');ob(g,X+5,Y+11,7,2,'#666');px(g,X+7,Y+13,3,2,'#333')}
  else if(it.seed){ob(g,X+3,Y+2,10,12,'#e8dcc0');px(g,X+3,Y+2,10,3,'#c8bca0');ob(g,X+6,Y+7,4,4,c);px(g,X+5,Y+12,6,1,'#a89878')}
  else if(it.crop){drawCrop(g,X,Y+1,id,1,0)}
- else if(['iron','crys','cob','pla'].includes(id)){ob(g,X+3,Y+5,10,8,shade(c,-.3));px(g,X+4,Y+4,4,6,c);px(g,X+8,Y+3,4,7,c);px(g,X+5,Y+5,1,3,'#fff8')}
+ else if(['iron','crys','cob','pla','frz'].includes(id)){ob(g,X+3,Y+5,10,8,shade(c,-.3));px(g,X+4,Y+4,4,6,c);px(g,X+8,Y+3,4,7,c);px(g,X+5,Y+5,1,3,'#fff8')}
  else if(id=='spr'||id=='qspr'){ob(g,X+5,Y+8,6,6,'#667');ob(g,X+3,Y+5,10,3,c);px(g,X+7,Y+2,2,3,'#9cf');if(id=='qspr')px(g,X+2,Y+4,12,1,'#ffd23a')}
  else if(id=='pendant'){g.strokeStyle='#fd6';g.beginPath();g.arc(X+8,Y+5,4,0,3.2,true);g.stroke();ob(g,X+6,Y+8,4,5,c);px(g,X+7,Y+9,1,2,'#fff')}
  else if(id=='core'){ob(g,X+4,Y+3,8,10,'#4ad8ff');px(g,X+6,Y+5,4,6,'#fff');px(g,X+7,Y+1,2,14,'#bff8')}

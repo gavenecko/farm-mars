@@ -14,13 +14,13 @@ function panel(x,y,w,h,c='#140a1ce8',b='#ff6aa8'){R(x,y,w,h,b);R(x+1,y+1,w-2,h-2
 const keys={};let joy={on:false,id:null,ox:0,oy:0,dx:0,dy:0},touchUI='ontouchstart' in window,btnFx={};
 const BTN={A:{x:W-36,y:H-62,r:23},B:{x:W-82,y:H-30,r:18}};const HB={x:62,y:H-22,s:21};
 function firstInput(){auInit();AU.music=G.music;AU.sfx=G.sfx;if(AU.ctx&&AU.ctx.state=='suspended')AU.ctx.resume()}
-addEventListener('keydown',e=>{firstInput();const k=e.key.toLowerCase();if(keys[k])return;keys[k]=1;if(['arrowup','arrowdown',' ','tab'].includes(k))e.preventDefault();
+addEventListener('keydown',e=>{firstInput();const k=e.key.toLowerCase();if(keys[k])return;keys[k]=1;if(TITLE){if(k>='1'&&k<='3')startSlot(+k);if(k=='enter'||k==' ')startSlot(1);if(k=='f')toggleFS();return}if(['arrowup','arrowdown',' ','tab'].includes(k))e.preventDefault();
  if(modal){if(k=='arrowup'||k=='w')modal.sel=Math.max(0,modal.sel-1),sfx('menu');else if(k=='arrowdown'||k=='s')modal.sel=Math.min((modal.opts||[1]).length-1,modal.sel+1),sfx('menu');else if([' ','enter','e','j','k'].includes(k))modalAdvance(-1);return}
  if(k=='m'||k=='escape'||k=='i'){menu?closeMenu():openMenu('bag');return}if(menu){if(k=='q')menuTab(-1);if(k=='e')menuTab(1);return}
  if(k==' '||k=='j')act();if(k=='e'||k=='k')interact();if(k=='q')G.sel=(G.sel+9)%10;if(k=='tab')G.sel=(G.sel+1)%10;if(k>='1'&&k<='9')G.sel=+k-1;if(k=='0')G.sel=9});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
 function toGame(t){const r=cv.getBoundingClientRect();return[(t.clientX-r.left)/S,(t.clientY-r.top)/S]}
-function onTap(x,y){firstInput();if(modal){modalTap(x,y);return true}if(menu){menuTap(x,y);return true}
+function onTap(x,y){firstInput();if(TITLE){titleTap(x,y);return true}if(modal){modalTap(x,y);return true}if(menu){menuTap(x,y);return true}
  if(x>W-68&&x<W-48&&y<22){toggleFS();return true}if(x>W-46&&y<22){openMenu('bag');sfx('menu');return true}
  if(y>HB.y-2&&x>=HB.x&&x<HB.x+10*HB.s){G.sel=Math.floor((x-HB.x)/HB.s);sfx('menu');return true}
  for(const k in BTN){const b=BTN[k];if(Math.hypot(x-b.x,y-b.y)<b.r+6){btnFx[k]=8;k=='A'?act():interact();return true}}return false}
@@ -41,11 +41,11 @@ function menuTab(d){menu.tab=TABS[(TABS.indexOf(menu.tab)+d+4)%4];sfx('menu')}
 function menuTap(x,y){if(x>W-40&&y<34){closeMenu();return}if(y>14&&y<32){const i=Math.floor((x-20)/62);if(i>=0&&i<4){menu.tab=TABS[i];menu.pick=null;sfx('menu')}return}
  if(menu.tab=='bag'){const i=slotAt(x,y);if(i<0)return;if(menu.pick==null){menu.pick=i;if(i<10)G.sel=i}else{const a=G.inv[menu.pick];G.inv[menu.pick]=G.inv[i];G.inv[i]=a;menu.pick=null}sfx('menu')}
  if(menu.tab=='craft'){const i=Math.floor((y-40)/18);const rs=RECIPES;if(i>=0&&i<rs.length)craft(rs[i])}
- if(menu.tab=='system'){const i=Math.floor((y-44)/20);if(i==0){G.music=AU.music=!G.music}if(i==1){G.sfx=AU.sfx=!G.sfx}if(i==2)save();if(i==5)toggleFS();if(i==4){if(unstick(true)){toast('Moved to a safe spot');menu=null}}if(i==3){if(menu.confirm){localStorage.removeItem('farmmars2');localStorage.removeItem('farmmars1');G=newGame();boot();menu=null;toast('New game started')}else{menu.confirm=1;toast('Tap again to confirm NEW GAME')}}sfx('menu')}}
+ if(menu.tab=='system'){const i=Math.floor((y-40)/19);if(i==0){G.music=AU.music=!G.music}if(i==1){G.sfx=AU.sfx=!G.sfx}if(i==2)save();if(i==5)toggleFS();if(i==6){save(true);menu=null;TITLE=true;return}if(i==4){if(unstick(true)){toast('Moved to a safe spot');menu=null}}if(i==3){if(menu.confirm){localStorage.removeItem(slotKey(SLOT));if(SLOT==1)localStorage.removeItem('farmmars1');G=newGame();boot();menu=null;toast('New game started')}else{menu.confirm=1;toast('Tap again to confirm NEW GAME')}}sfx('menu')}}
 function slotAt(x,y){const sx=(W-10*24)/2,sy=44;const c=Math.floor((x-sx)/24),r=Math.floor((y-sy)/24);return c>=0&&c<10&&r>=0&&r<3?r*10+c:-1}
 // ---------- update ----------
 let lastHour=-1;
-function update(){tick++;if(toastT)toastT--;if(swingT)swingT--;if(invT)invT--;for(const k in btnFx)if(btnFx[k])btnFx[k]--;
+function update(){tick++;if(TITLE)return;if(toastT)toastT--;if(swingT)swingT--;if(invT)invT--;for(const k in btnFx)if(btnFx[k])btnFx[k]--;
  P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=p.gr;p.l--});P=P.filter(p=>p.l>0);FT.forEach(f=>{f.y-=.4;f.l--});FT=FT.filter(f=>f.l>0);
  setMusic(G.zone=='mine'&&MINE.boss&&!G.bossDead?'boss':EXITS[G.zone]?'indoor':G.zone);
  if(modal){if(modal.ch<modal.pages[modal.pi].length){modal.ch+=1.5;if(tick%4==0&&modal.look)sfx('talk')}return}
@@ -63,6 +63,7 @@ function update(){tick++;if(toastT)toastT--;if(swingT)swingT--;if(invT)invT--;fo
  for(const id in npcRT){const n=npcRT[id];if(n.zone!=G.zone)continue;n.mv=false;
   if((!n.path||!n.path.length)&&Math.random()<.008){const gx=Math.floor(n.hx/T)+Math.round((Math.random()-.5)*5),gy=Math.floor(n.hy/T)+Math.round((Math.random()-.5)*3);n.path=npcPath(Math.floor(n.x/T),Math.floor(n.y/T),gx,gy)}
   if(n.path&&n.path.length&&!modal){const[tx,ty]=n.path[0],a=tx*T+8-n.x,b=ty*T+8-n.y,d=Math.hypot(a,b);if(d<.6){n.x=tx*T+8;n.y=ty*T+8;n.path.shift()}else{const s=Math.min(.45,d);n.x+=a/d*s;n.y+=b/d*s;n.mv=true;n.dir=Math.abs(a)>Math.abs(b)?(a>0?1:3):(b>0?2:0);n.f=(n.f||0)+.1}}}
+ if(G.zone=='farm')updAnimals();
  if(G.zone=='farm'){if(Math.random()<.006){robot.tx=(10+Math.random()*18)*T;robot.ty=(8+Math.random()*10)*T}robot.x+=Math.sign(robot.tx-robot.x)*.5;robot.y+=Math.sign(robot.ty-robot.y)*.5}
  if(G.zone=='surf'||G.zone=='mine')hostile();}
 function npcPath(sx,sy,gx,gy){const m=curMap(),w=m[0].length,h=m.length,ok=(x,y)=>x>0&&y>0&&x<w-1&&y<h-1&&!isSolid(G.zone,m[y][x])&&!'XDMuvP'.includes(m[y][x])&&!(G.zone=='farm'&&G.objs[x+','+y]);
@@ -71,15 +72,15 @@ function npcPath(sx,sy,gx,gy){const m=curMap(),w=m[0].length,h=m.length,ok=(x,y)
 function triggers(){const tx=Math.floor(G.px/T),ty=Math.floor((G.py-2)/T),t=tileAt(tx,ty),z=G.zone;
  if(t=='X'){if(z=='farm'&&tx>=30)enter('city',1,10,1);else if(z=='farm')enter('surf',31,41,0);else if(z=='city')enter('farm',29,10,3);else enter('farm',15,1,2)}
  if(t=='D'){if(EXITS[z]){const e=EXITS[z];enter(e[0],e[1],e[2],2)}else{const d=DOORS[z+':'+tx+','+ty];if(d)enter(d[0],d[1],d[2],0)}}
- if(t=='M'){G.py+=T;if(G.deep>=6)say('Mine Elevator','Select a floor:',[{t:'Floor 1',f:()=>enterMine(1)},{t:'Floor 6',f:()=>enterMine(6)},{t:'Cancel'}]);else enterMine(1)}
+ if(t=='M'){G.py+=T;if(G.deep>=6){const o=[1,6,11,16].filter(f=>f==1||G.deep>=f).map(f=>({t:'Floor '+f+(f>10?' (Frozen Depths)':''),f:()=>enterMine(f)}));o.push({t:'Cancel'});say('Mine Elevator','Select a floor:',o)}else enterMine(1)}
  if(t=='u'){enter('surf',50,9,2)}
- if(t=='v'){if(G.floor>=10){G.py+=T;say('Floor 10','The tunnel ends in solid basalt. This is the bottom... for now.')}else enterMine(G.floor+1)}}
+ if(t=='v'){if(G.floor>=20){G.py+=T;say('Floor 20','The ice gives way to solid basalt. This is the very bottom... for now.')}else{enterMine(G.floor+1);if(G.floor==11)say('Frozen Depths','The air turns bitter cold. Frost coats the walls, and something skitters in the dark. (Floors 11-20: Cryo Shards and Frostmites)')}}}
 function hurt(d,from){if(invT)return;G.hp-=d;invT=45;sfx('hurt');parts(G.px,G.py-8,'#f44',8);floatTxt(G.px,G.py-20,'-'+d,'#f66');if(from){const a=Math.atan2(G.py-from.y,G.px-from.x);for(let i=0;i<8;i++){const nx=G.px+Math.cos(a)*1.5,ny=G.py+Math.sin(a)*1.5;if(!solidAt(nx,ny)){G.px=nx;G.py=ny}}}
  if(G.hp<=0){const fee=Math.min(500,Math.floor(G.money*.1));G.money-=fee;G.hp=50;G.o2=100;enter('farm',13,2,2);say('Med Drone','You blacked out. A rescue drone dragged you back to the dome. Medical fee: '+fee+'cr.')}}
 function hostile(){const storm=season()=='Storm'&&G.zone=='surf';if(tick%(G.zone=='mine'?90:storm?40:55)==0)G.o2=Math.max(0,G.o2-1);if(G.o2<=0&&tick%30==0){G.hp-=4;sfx('hurt');if(G.hp<=0)hurt(0)}
  const bugs=ENTS.filter(e=>e.k=='bug');
  for(const e of bugs){const b=BUGS[e.t],d=Math.hypot(G.px-e.x,G.py-e.y),a=Math.atan2(G.py-e.y,G.px-e.x);let mx=0,my=0;e.tm++;if(e.hit)e.hit--;
-  if(e.t=='crawler'&&d<110){mx=Math.cos(a)*b.spd;my=Math.sin(a)*b.spd}
+  if((e.t=='crawler'||e.t=='frostmite')&&d<110){mx=Math.cos(a)*b.spd;my=Math.sin(a)*b.spd}
   if(e.t=='spitter'&&d<130){const s=d<50?-1:d>85?1:0;mx=Math.cos(a)*b.spd*s;my=Math.sin(a)*b.spd*s;if(e.tm%100==0)shoot(e,a,1.7,b.dmg)}
   if(e.t=='hopper'&&d<120){const ph=e.tm%80;if(ph<55){mx=Math.cos(a)*.15;my=Math.sin(a)*.15;e.da=a}else{mx=Math.cos(e.da)*3;my=Math.sin(e.da)*3}}
   if(e.t=='queen'){const ph=Math.floor(e.tm/220)%3;if(ph==0){mx=Math.cos(a)*b.spd;my=Math.sin(a)*b.spd}if(ph==1&&e.tm%45==0){for(let i=0;i<12;i++)shoot(e,i/12*6.283+e.tm,1.4,10);sfx('shoot')}
@@ -92,16 +93,16 @@ function shoot(e,a,s,d){PR.push({x:e.x,y:e.y-6,vx:Math.cos(a)*s,vy:Math.sin(a)*s
 // ---------- render ----------
 let LIGHTS=[];const light=(x,y,r,c)=>LIGHTS.push({x,y,r,c});
 function zoneKey(){return G.zone}
-function draw(){const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=[];
+function draw(){if(TITLE){drawTitle();return}const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=[];
  let ox=Math.round(Math.max(0,Math.min(mw-W,G.px-W/2))),oy=Math.round(Math.max(0,Math.min(mh-H,G.py-H/2-10)));if(mw<W)ox=Math.round(-(W-mw)/2);if(mh<H)oy=Math.round(-(H-mh)/2);
  cx.fillStyle={farm:'#2a1208',city:'#0a0614',surf:'#12040c',mine:'#08060c'}[z]||'#0a0608';cx.fillRect(0,0,W,H);
  if(EXITS[z]){cx.fillStyle='#000';cx.fillRect(0,0,W,H)}
  const x0=Math.max(0,Math.floor(ox/T)),y0=Math.max(0,Math.floor(oy/T)),x1=Math.min(m[0].length,Math.ceil((ox+W)/T)+1),y1=Math.min(m.length,Math.ceil((oy+H)/T)+2);
  const D=[];
  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const t=m[y][x],X=x*T-ox,Y=y*T-oy,v=hash(x,y)%4;let bt=t;
-  if(z=='farm'&&'HBTL'.includes(t))bt='g';if(z=='city'&&'HAFLS'.includes(t))bt='p';
+  if(z=='farm'&&'HBTLN'.includes(t))bt='g';if(z=='city'&&'HAFLSQ'.includes(t))bt='p';
   cx.drawImage(tileImg(z,bt,v),X,Y);
-  if((z=='surf'||z=='mine')&&t=='R'){const top=z=='mine'?['#3a3048','#4a4060','#1e1828']:['#7a2a3e','#a04a5e','#3a0e1c'];D.push([Y+T,()=>{R(X,Y-7,T,T,top[0]);R(X,Y-7,T,2,top[1]);R(X,Y+9,T,7,top[2]);if(v==1)R(X+4,Y-3,3,2,top[2]);R(X+T,Y+2,3,T-2,'#0003')}])}
+  if((z=='surf'||z=='mine')&&t=='R'){const top=z=='mine'?(G.floor>10?['#6a8ab0','#cfe8ff','#2a3a5a']:['#3a3048','#4a4060','#1e1828']):['#7a2a3e','#a04a5e','#3a0e1c'];D.push([Y+T,()=>{R(X,Y-7,T,T,top[0]);R(X,Y-7,T,2,top[1]);R(X,Y+9,T,7,top[2]);if(v==1)R(X+4,Y-3,3,2,top[2]);R(X+T,Y+2,3,T-2,'#0003')}])}
   if(z=='surf'&&t=='O'){D.push([Y+T,()=>{R(X+4,Y-18,8,32,'#2a1a3a');R(X+5,Y-17,6,30,'#3a2a50');const g=tick%120<60;R(X+7,Y-12,2,2,g?'#6ff':'#288');R(X+7,Y-6,2,2,'#6ff');R(X+7,Y,2,2,g?'#288':'#6ff')}]);light(X+8,Y-6,26,'#4ff')}
   if(z=='surf'&&t=='V')light(X+8,Y+8,22,'#f80');
   if(t=='L'){D.push([Y+T,()=>{R(X+7,Y-18,2,32,'#556');R(X+4,Y-20,8,3,z=='city'?'#f0f':'#ffb050');R(X+5,Y-17,6,1,'#fff8')}]);light(X+8,Y-18,46,z=='city'?'#f4f':'#fb6')}
@@ -109,7 +110,9 @@ function draw(){const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=
     if(ft.c){const c=ft.c,st=Math.min(ft.g/CROPS[c].days,1),wilt=ft.dry>=2;D.push([Y+12,()=>drawCrop(cx,X,Y,c,st,wilt)]);if(c=='glo'||c=='frb')light(X+8,Y+6,14,CROPS[c].c)}}
    const o=G.objs[x+','+y];if(o)D.push([Y+12,()=>{drawIcon(cx,o,X,Y);if(tick%90<10)R(X+3,Y+2,10,1,'#9cf')}]);
    if(t=='T')D.push([Y+T,()=>{if(x==25&&y==2){R(X,Y-10,32,42,'#5a7a8a');R(X+1,Y-10,30,4,'#9ab');R(X+3,Y+2,26,14,'#3a8ab0');R(X+3,Y+2,26,2,'#8ef');R(X+1,Y+28,30,4,'#3a4a5a');txt('H2O',X+16,Y-1,'#cef',7,'center',0)}}]);
+   if(t=='N'&&x==11&&y==2)D.push([Y+3*T,()=>drawBarn(X,Y)]);
    if(t=='B')D.push([Y+T,()=>{R(X,Y+2,T,13,'#6b3b1f');R(X,Y+2,T,4,'#a86a3a');R(X+2,Y+9,12,1,'#432');R(X+6,Y+4,4,1,'#fd6')}])}
+  if(z=='city'&&t=='Q')D.push([Y+T,()=>{R(X+2,Y+8,2,8,'#5a3a2a');R(X+12,Y+8,2,8,'#5a3a2a');R(X,Y-8,T,16,'#7a4a2a');R(X+1,Y-7,14,14,'#d8b888');R(X+3,Y-5,5,4,'#fff');R(X+9,Y-4,4,5,G.req&&!G.req.done?'#ff6':'#9c9');R(X+4,Y+1,8,1,'#a87')}]),light(X+8,Y,14,'#ff8');
   if(z=='mine'&&(t=='u'||t=='v'))light(X+8,Y+8,24,t=='v'?'#fd6':'#8cf');}
  drawStructures(ox,oy,D);
  // entities
@@ -117,7 +120,8 @@ function draw(){const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=
   if(swingT&&G.dir==0)drawSwing(X,Y);drawChar(cx,X,Y,PLOOK,G.dir,fr,{suit:z=='surf'||z=='mine',swing:swingT>0});if(swingT&&G.dir!=0)drawSwing(X,Y)};
  D.push([G.py-oy,pl]);
  for(const id in npcRT){const n=npcRT[id];if(n.zone!=z)continue;const npc=NPCS.find(q=>q.id==id),X=n.x-8-ox,Y=n.y-24-oy;D.push([n.y-oy,()=>{drawChar(cx,X,Y,npc.look,n.dir||2,n.mv?Math.floor(n.f*2.5)%4:0);
-   const near=Math.hypot(n.x-G.px,n.y-G.py)<40;if(near||G.spouse==id){txt((G.spouse==id?'♥ ':'')+npc.n,X+8,Y-3,G.spouse==id?'#f8a':'#fff',7,'center')}if(G.events&&[3,6,9].some(l=>G.hearts[id]>=l&&npc.ev[l]&&!G.events[id+l]))txt('!',X+8,Y-10+Math.sin(tick/8)*2,'#ff0',9,'center')}])}
+   const near=Math.hypot(n.x-G.px,n.y-G.py)<40;if(near||G.spouse==id){txt((G.spouse==id?'♥ ':'')+npc.n,X+8,Y-3,G.spouse==id?'#f8a':'#fff',7,'center')}const em=EMO[id];if(em&&tick<em.e)drawEmote(X+8,Y-14,em.k);else if(G.events&&[3,6,9].some(l=>G.hearts[id]>=l&&npc.ev[l]&&!G.events[id+l]))txt('!',X+8,Y-10+Math.sin(tick/8)*2,'#ff0',9,'center')}])}
+ if(z=='farm')for(const a of G.animals){const X=a.x-ox,Y=a.y-oy;D.push([Y,()=>{drawAnimal(a,X,Y);if(Math.hypot(a.x-G.px,a.y-G.py)<36)txt(a.n+(a.pet==G.day?' ♥':''),X,Y-16,'#fff',7,'center')}])}
  if(z=='farm'){D.push([robot.y-oy,()=>drawRobot(cx,robot.x-8-ox,robot.y-16-oy,tick)]);light(robot.x-ox,robot.y-10-oy,16,'#0ff')}
  for(const e of ENTS){const X=e.x-ox,Y=e.y-oy;if(X<-40||X>W+40||Y<-40||Y>H+40)continue;
   if(e.k=='ore')D.push([Y+4,()=>drawOre(e,X,Y)]),e.t!='stone'&&e.t!='iron'&&light(X,Y-4,18,ITEMS[e.t].c);
@@ -128,7 +132,7 @@ function draw(){const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=
  P.forEach(p=>R(p.x-ox,p.y-oy,2,2,p.c));
  overlays(ox,oy);lighting(ox,oy);if(G.zone=='city'&&isFestival()&&G.time>=480&&G.time<1000)festival(ox,oy);if(FISHING)drawFish(ox,oy);
  FT.forEach(f=>txt(f.s,f.x-ox,f.y-oy,f.c,7,'center'));
- hud();if(menu)drawMenu();if(modal)drawModal()}
+ hud();if(menu)drawMenu();if(modal&&modal.scene=='wed')drawWed(modal);if(modal)drawModal()}
 function festival(ox,oy){for(let r=0;r<3;r++){const y=(7+r*4)*T-oy;cx.strokeStyle='#ffd27a88';cx.beginPath();cx.moveTo(2*T-ox,y);for(let x=2;x<=29;x++)cx.lineTo(x*T-ox,y+Math.sin(x)*4);cx.stroke();
  for(let x=2;x<=29;x++){const c=['#f4f','#0ff','#ff4','#f84'][(x+r+Math.floor(tick/20))%4];R(x*T-ox-1,y+Math.sin(x)*4,3,3,c)}}panel(W/2-70,26,140,13,'#3a0a3acc','#ff4');txt("★ FOUNDERS' FESTIVAL ★",W/2,36,'#ffd27a',8,'center')}
 function drawFish(ox,oy){const f=FISHING,d=DIRV[G.dir],bx=G.px+d[0]*20-ox,by=G.py-4+d[1]*20-oy+(f.ph=='bite'?Math.sin(tick)*2:Math.sin(tick/10));
@@ -191,7 +195,7 @@ function overlays(ox,oy){const z=G.zone,s=season();
  if(z=='farm'||z=='surf'||z=='city'){cx.fillStyle=SEASON_TINT[s];cx.fillRect(0,0,W,H)}
  if(z=='surf'){const n=s=='Storm'?90:30,sp=s=='Storm'?3:.8;for(let i=0;i<n;i++){const x=(hash(i,7)%W+tick*sp*(1+i%3*.3))%W,y=(hash(7,i)%H+Math.sin(tick/50+i)*10+H)%H;R(x,y,i%4?1:2,1,s=='Storm'?'#c86a4aaa':'#e8a08a55')}}
  if(s=='Frost'&&(z=='farm'||z=='surf')){for(let i=0;i<40;i++){const x=(hash(i,3)%W),y=(hash(3,i)+tick*.5*(1+i%3))%H;R(x,y,1,1,'#fff8')}}
- if(z=='mine'){cx.fillStyle='rgba(40,20,80,.08)';cx.fillRect(0,0,W,H)}}
+ if(z=='mine'){cx.fillStyle=G.floor>10?'rgba(120,190,255,.12)':'rgba(40,20,80,.08)';cx.fillRect(0,0,W,H);if(G.floor>10)for(let i=0;i<25;i++){const x=hash(i,9)%W,y=(hash(9,i)+tick*.3*(1+i%3))%H;R(x,y,1,1,'#eef8')}}}
 function lighting(ox,oy){const z=G.zone,hr=G.time/60;let dark=hr<19?0:Math.min(.5,(hr-19)/5*.5);if(hr<6.5)dark=.38;
  if(EXITS[z])dark*=.35;if(z=='mine')dark=.62;if(z=='surf')dark=Math.min(.6,dark+.06);if(z=='city')dark*=.85;
  if(dark>.02){if(z=='mine'||(z=='surf'&&dark>.3))light(G.px-ox,G.py-10-oy,z=='mine'?110:80,'#ffe0a0');
@@ -202,12 +206,12 @@ function lighting(ox,oy){const z=G.zone,hr=G.time/60;let dark=hr<19?0:Math.min(.
 function hexA(h,a){let c=h.replace('#','');if(c.length==3)c=c.split('').map(q=>q+q).join('');const n=parseInt(c.slice(0,6),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`}
 function bar(x,y,v,mx,c,l){R(x,y,56,7,'#000');R(x+1,y+1,54,5,'#2a1a2a');R(x+1,y+1,54*Math.max(0,v)/mx,5,c);R(x+1,y+1,54*Math.max(0,v)/mx,1,'#fff5');txt(l,x+59,y+7,'#fff',7)}
 function aLabel(){if(FISHING)return FISHING.ph=='reel'?'REEL!':FISHING.ph=='bite'?'HOOK!':'WAIT';const s=cur(),[fx,fy]=facingTile();if(G.zone=='farm'&&mature(G.tiles[fx+','+fy]))return 'HARVEST';if(!s)return 'USE';const it=ITEMS[s[0]];
- if(it.food||it.use)return 'EAT';if(it.seed)return 'PLANT';if(it.place)return 'PLACE';return{rod:'FISH',hoe:'TILL',can:'WATER',pick:'MINE',blade:'ATTACK'}[s[0]]||'USE'}
+ if(it.food||it.use)return 'EAT';if(it.seed)return 'PLANT';if(it.place)return 'PLACE';return{rod:'FISH',hoe:'TILL',can:'WATER',pick:'MINE',blade:'ATTACK',lance:'ATTACK',hammer:'SMASH'}[s[0]]||'USE'}
 function hud(){const z=G.zone;panel(3,3,124,z=='surf'||z=='mine'?47:38,'#0a0612d8','#ffb050');
  const h=Math.floor(G.time/60)%24,mm=G.time%60,ic=G.time<1140?'☀':'☾';txt(`${season()} ${solOfSeason()} · Y${year()}`,7,12,'#ffd27a',8);txt(ic+' '+String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'),123,12,'#fff',8,'right');
  bar(7,16,G.energy,G.maxEn,'#fc3','EN');bar(7,25,G.hp,100,'#f44','HP');txt(G.money+'cr',123,32,'#7f7',8,'right');
  if(z=='surf'||z=='mine'){bar(7,34,G.o2,100,G.o2<25&&tick%20<10?'#f00':'#3cf','O2');if(G.o2<25)txt('LOW OXYGEN!',W/2,46,'#f44',9,'center')}
- const zn={farm:'Dome Farm',city:'New Cydonia',surf:'Martian Surface',home:'Your Habitat',cafe:'Red Dust Cafe',shop:'Supply & Tech',cc:'Community Center',mine:'Mine - Floor '+G.floor}[z];txt(zn,W/2,12,'#fff9',8,'center');
+ const zn={farm:'Dome Farm',mine2:0,city:'New Cydonia',surf:'Martian Surface',home:'Your Habitat',cafe:'Red Dust Cafe',shop:'Supply & Tech',cc:'Community Center',mine:(G.floor>10?'Frozen Depths - ':'Mine - Floor ')+(G.floor>10?'F'+G.floor:G.floor)}[z];txt(zn,W/2,12,'#fff9',8,'center');
  const boss=ENTS.find(e=>e.t=='queen');if(boss){R(W/2-80,18,160,8,'#000');R(W/2-79,19,158*boss.hp/boss.max,6,'#4df');txt('CRYSTAL QUEEN',W/2,32,'#bff',7,'center')}
  R(W-46,3,43,19,'#ff6aa8');R(W-45,4,41,17,'#1a0a24');txt('MENU',W-24.5,16,'#fff',8,'center');R(W-67,3,19,19,'#ffb050');R(W-66,4,17,17,'#1a0a24');{const c='#fff',a=W-63,b=7,o=isFS()?3:0;R(a+o,b+o,4,1,c);R(a+o,b+o,1,4,c);R(a+11-o,b+o,4,1,c);R(a+14-o,b+o,1,4,c);R(a+o,b+10+o-o*2,1,4,c);R(a+o,b+13-o,4,1,c);R(a+14-o,b+10-o,1,4,c);R(a+11-o,b+13-o,4,1,c)}
  for(let i=0;i<10;i++){const X=HB.x+i*HB.s,Y=HB.y;R(X,Y,HB.s-1,HB.s-1,i==G.sel?'#ffd27a':'#000c');R(X+1,Y+1,HB.s-3,HB.s-3,i==G.sel?'#4a2a3a':'#2a1a2acc');const s=G.inv[i];if(s){drawIcon(cx,s[0],X+2,Y+2);const it=ITEMS[s[0]];if(it.tool&&G.tools[s[0]]>1)R(X+2,Y+2,3,3,['','','#c96','#46f'][G.tools[s[0]]]);if(!it.tool)txt(s[1],X+HB.s-2,Y+HB.s-2,'#fff',7,'right')}}
@@ -231,15 +235,52 @@ function drawMenu(){panel(12,8,W-24,H-16,'#120818f4','#ffb050');TABS.forEach((t,
   txt(`Harvested ${G.stats.harvest} · Mined ${G.stats.mined} · Bugs ${G.stats.bugs} · Deepest floor ${G.deep}`,W/2,H-20,'#9ab',7,'center')}
  if(menu.tab=='craft'){RECIPES.forEach((r,i)=>{const Y=40+i*18,ok=hasAll(r.in)&&(!r.cook||G.zone=='home');panel(24,Y,W-48,16,ok?'#1a3a2a':'#1a0e24',ok?'#6c6':'#5a4a5a');drawIcon(cx,r.id,27,Y);
   txt(ITEMS[r.id].n+(r.cook?' (kitchen)':''),46,Y+11,ok?'#bfb':'#bbb',8);txt(Object.entries(r.in).map(([k,q])=>cnt(k)+'/'+q+' '+ITEMS[k].n).join('  '),W-28,Y+11,'#ddd',7,'right')});txt('Tap a recipe to craft. Cooking works at your home kitchen.',W/2,H-18,'#aaa',7,'center')}
- if(menu.tab=='social'){NPCS.forEach((n,i)=>{const Y=38+i*36;panel(24,Y,W-48,33,'#1a0e24','#6a4a6a');drawPortrait(cx,27,Y+1,n.look,2);const h=G.hearts[n.id];txt(n.n,62,Y+12,'#ffd27a',8);
-  for(let j=0;j<10;j++)txt(j<Math.floor(h)?'♥':j<h?'♡':'·',62+j*9,Y+25,j<h?'#f6a':'#666',9);
-  const st=G.spouse==n.id?'Spouse ♥':G.dating[n.id]?'Dating':n.mar?'Single':'';txt(st,W-30,Y+12,'#f8c',8,'right');txt(h>=4?'Likes: '+n.likes.map(k=>ITEMS[k].n).join(', '):'Likes: ??? (4♥)',W-30,Y+25,'#9ab',7,'right')})}
- if(menu.tab=='system'){['Music: '+(G.music?'ON':'OFF'),'Sound FX: '+(G.sfx?'ON':'OFF'),'Save game','New game'+(menu.confirm?' - TAP AGAIN TO CONFIRM':''),'Unstuck me (move to safe spot)','Fullscreen: '+(isFS()?'ON':'OFF')].forEach((l,i)=>{panel(60,44+i*20,W-120,17,'#1a0e24','#7a4a8a');txt(l,W/2,56+i*20,'#fff',8,'center')});
-  if(0)txt('Keys: WASD move · Space use · E act · 1-0 hotbar · M menu',W/2,H-30,'#aaa',7,'center');txt('Farm Mars v2 · saves automatically each night',W/2,H-19,'#777',7,'center')}}
+ if(menu.tab=='social'){NPCS.forEach((n,i)=>{const X=18+(i%2)*174,Y=36+Math.floor(i/2)*41,w=170;panel(X,Y,w,39,'#1a0e24',isBday(n)?'#ffd27a':'#6a4a6a');drawPortrait(cx,X+2,Y+3,n.look,2);const h=G.hearts[n.id]||0;txt(n.n,X+36,Y+10,'#ffd27a',8);
+  for(let j=0;j<10;j++)txt(j<Math.floor(h)?'♥':j<h?'♡':'·',X+36+j*8,Y+21,j<h?'#f6a':'#666',8);
+  const st=G.spouse==n.id?'Spouse ♥':G.dating[n.id]?'Dating':n.mar?'Single':'';txt(st,X+w-4,Y+10,'#f8c',7,'right');const b=BDAY[n.id];
+  cx.save();cx.beginPath();cx.rect(X+2,Y+24,w-4,14);cx.clip();txt((isBday(n)?'BIRTHDAY TODAY! ':'Bday '+SEASONS[b[0]]+' '+b[1]+' · ')+(h>=4?'Likes '+n.likes.slice(0,2).map(k=>ITEMS[k].n).join(', '):'Likes ??? (4♥)'),X+36,Y+33,isBday(n)?'#ffd27a':'#9ab',7);cx.restore()})}
+ if(menu.tab=='system'){['Music: '+(G.music?'ON':'OFF'),'Sound FX: '+(G.sfx?'ON':'OFF'),'Save game','New game'+(menu.confirm?' - TAP AGAIN TO CONFIRM':''),'Unstuck me (move to safe spot)','Fullscreen: '+(isFS()?'ON':'OFF'),'Save & return to title (slot '+SLOT+')'].forEach((l,i)=>{panel(60,40+i*19,W-120,16,'#1a0e24','#7a4a8a');txt(l,W/2,51+i*19,'#fff',8,'center')});
+  if(0)txt('Keys: WASD move · Space use · E act · 1-0 hotbar · M menu',W/2,H-30,'#aaa',7,'center');txt('Farm Mars v3 · slot '+SLOT+' · saves each night',W/2,H-19,'#777',7,'center')}}
 // ---------- boot ----------
 function boot(){ENTS=[];SURF=genSurface();MINE=null;for(const k in npcRT)delete npcRT[k];if(G.zone=='mine'){G.zone='surf';G.px=50*T+8;G.py=9*T+8}if(G.zone=='surf')ENTS=SURF;placeNPCs(true);unstick(false);AU.music=G.music;AU.sfx=G.sfx}
-G=load()||newGame();boot();
-if(G.migrated){delete G.migrated;say('Farm Mars v2','Your v1 save was carried over: day, credits, crops, items and friendships. Tools were reset and new mechanics unlocked!')}
-else if(G.day==1&&G.time==360&&!localStorage.getItem('farmmars2'))say('Welcome to Farm Mars',['Sol 1, Dust season, year 2091. You inherited a dome farm outside New Cydonia.','Till soil with the Hoe, plant seeds, and water them every sol. Sleep in your habitat bed to end the day.','East gate: the neon city. North airlock: the Martian surface and the old mine. Tap MENU for your bag, crafting and friends.']);
-window.FM={get G(){return G},enter,enterMine,sleep,add,talk:id=>talk(NPCS.find(n=>n.id==id)),act,interact,get modal(){return modal},modalAdvance,ents:()=>ENTS,npcRT};
+let TITLE=true;G=newGame();
+function slotInfo(s){try{const o=JSON.parse(localStorage.getItem(slotKey(s)));if(o&&o.day)return o}catch(e){}if(s==1)try{const o=JSON.parse(localStorage.getItem('farmmars1'));if(o&&o.day)return{day:o.day,money:o.money||0,v1:1}}catch(e){}return null}
+function startSlot(s){SLOT=s;const l=load();G=l||newGame();boot();TITLE=false;modal=null;menu=null;genReq();firstInput();
+ if(G.migrated){delete G.migrated;say('Farm Mars v2','Your v1 save was carried over: day, credits, crops, items and friendships. Tools were reset and new mechanics unlocked!')}
+ else if(!l)say('Welcome to Farm Mars',['Sol 1, Dust season, year 2091. You inherited a dome farm outside New Cydonia.','Till soil with the Hoe, plant seeds, and water them every sol. Sleep in your habitat bed to end the day.','East gate: the neon city. North airlock: the Martian surface and the old mine. Tap MENU for your bag, crafting and friends.','New: buy hens and goats for your barn, check the city Request Board daily, and donate specimens to the Research Archive at the Community Center.']);save(true)}
+const TSL=i=>[W/2-120,84+i*30,240,26];
+function titleTap(x,y){for(let i=0;i<3;i++){const[a,b,w,h]=TSL(i);if(x>=a&&x<=a+w&&y>=b&&y<=b+h){sfx('menu');startSlot(i+1);return}}if(y>H-30&&Math.abs(x-W/2)<70)toggleFS()}
+function drawTitle(){const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0a0420');g.addColorStop(.6,'#3a0e2a');g.addColorStop(1,'#a03a1a');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ for(let i=0;i<70;i++){const x=hash(i,1)%W,y=hash(1,i)%120;R(x,y,1,1,(tick/20+i)%9<1?'#fff':'#fff8')}
+ cx.fillStyle='#c8502e';cx.beginPath();cx.arc(W-60,40,26,0,6.3);cx.fill();cx.fillStyle='#e87a4a';cx.beginPath();cx.arc(W-66,34,14,0,6.3);cx.fill();
+ cx.strokeStyle='#ffffff30';for(let i=1;i<=4;i++){cx.beginPath();cx.ellipse(70,H+10,110,110*i/4,0,Math.PI,0);cx.stroke()}
+ txt('FARM MARS',W/2,40,'#ffd27a',28,'center','#6a1a2a');txt('a colony farming life',W/2,56,'#f8c',8,'center');
+ for(let i=0;i<3;i++){const[a,b,w,h]=TSL(i),o=slotInfo(i+1);panel(a,b,w,h,'#140a1ce8',o?'#ffb050':'#6a4a8a');txt('SLOT '+(i+1),a+8,b+16,'#ffd27a',8);
+  txt(o?(o.v1?'v1 save - Sol '+o.day:'Sol '+o.day+' · '+season(o.day)+' · Y'+(1+Math.floor((o.day-1)/(SOLS_PER_SEASON*4)))+' · '+o.money+'cr'+(o.spouse?' · ♥':'')):'Empty - tap to start a new farm',a+w-8,b+16,o?'#fff':'#aaa',8,'right')}
+ panel(W/2-70,H-28,140,18,'#1a0a24','#ffb050');txt((isFS()?'EXIT ':'')+'FULLSCREEN',W/2,H-16,'#fff',8,'center');txt('Android: browser menu > Add to Home screen for app mode',W/2,H-34,'#fff8',7,'center')}
+if(0){if(G.migrated){delete G.migrated;say('Farm Mars v2','Your v1 save was carried over: day, credits, crops, items and friendships. Tools were reset and new mechanics unlocked!')}
+else if(G.day==1&&G.time==360&&!localStorage.getItem('farmmars2'))say('Welcome to Farm Mars',['Sol 1, Dust season, year 2091. You inherited a dome farm outside New Cydonia.','Till soil with the Hoe, plant seeds, and water them every sol. Sleep in your habitat bed to end the day.','East gate: the neon city. North airlock: the Martian surface and the old mine. Tap MENU for your bag, crafting and friends.'])}
+window.FM={start:startSlot,get TITLE(){return TITLE},get G(){return G},enter,enterMine,sleep,add,talk:id=>talk(NPCS.find(n=>n.id==id)),act,interact,get modal(){return modal},modalAdvance,ents:()=>ENTS,npcRT};
 function loop(){try{update();draw()}catch(e){console.error(e);if(!window.__err)window.__err=e}requestAnimationFrame(loop)}loop();
+
+// ---------- v3 art ----------
+function drawBarn(X,Y){R(X+4,Y+46,64,5,'#0005');R(X,Y+12,64,36,'#a8322a');for(let i=0;i<64;i+=6)R(X+i,Y+12,1,36,'#7a2018');R(X-4,Y,72,14,'#5a2a2a');R(X-4,Y,72,3,'#8a4a3a');R(X+4,Y-6,56,8,'#4a2020');
+ R(X+22,Y+24,20,24,'#f0e0d0');R(X+24,Y+26,16,22,'#7a2018');cx.strokeStyle='#f0e0d0';cx.lineWidth=2;cx.beginPath();cx.moveTo(X+24,Y+26);cx.lineTo(X+40,Y+48);cx.moveTo(X+40,Y+26);cx.lineTo(X+24,Y+48);cx.stroke();cx.lineWidth=1;
+ R(X+6,Y+18,10,8,'#f0e0d0');R(X+7,Y+19,8,6,G.time>=1140?'#ffd06a':'#3a2a2a');R(X+48,Y+18,10,8,'#f0e0d0');R(X+49,Y+19,8,6,G.time>=1140?'#ffd06a':'#3a2a2a');txt('BARN',X+32,Y+10,'#fff',7,'center','#4a1010')}
+function drawAnimal(a,X,Y){const b=a.mv&&tick%16<8?1:0,fl=a.f?1:-1;R(X-6,Y-1,12,3,'#0004');
+ if(a.t=='hen'){R(X-4,Y-8,8,6,'#f4f0e8');R(X-4,Y-8,8,1,'#fff');R(X+fl*3-1,Y-11,3,4,'#f4f0e8');R(X+fl*3-1,Y-12,2,1,'#e33');R(X+fl*5-(fl<0?1:0),Y-10,1,1,'#fa2');R(X+fl*3,Y-10,1,1,'#000');R(X-2,Y-2,1,2+b,'#fa2');R(X+1,Y-2,1,3-b,'#fa2');R(X-fl*4-1,Y-9,2,2,'#ddd')}
+ else{R(X-6,Y-10,12,7,'#b0583a');R(X-6,Y-10,12,2,'#d07a5a');R(X+fl*6-(fl<0?4:0),Y-13,4,5,'#b0583a');R(X+fl*6+(fl>0?1:-2),Y-15,1,2,'#ddd');R(X+fl*6+(fl>0?3:-4),Y-15,1,2,'#ddd');R(X+fl*7-(fl<0?1:0),Y-11,1,1,'#000');
+  for(const lx of[-5,-2,2,4])R(X+lx,Y-3,1,3+((lx>0)==!!b?0:-1),'#5a2a1a');R(X-fl*6-(fl>0?1:0),Y-10,1,3,'#7a3a2a')}}
+function drawEmote(x,y,k){const bob=Math.sin(tick/6)*1.5;R(x-6,y-10+bob,12,11,'#fff');R(x-5,y-11+bob,10,1,'#fff');R(x-1,y+1+bob,3,2,'#fff');
+ txt(k=='heart'?'♥':k=='angry'?'✖':'♪',x,y-2+bob,k=='heart'?'#e24':k=='angry'?'#a20':'#36c',8,'center',0)}
+function drawWed(m){const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#120a30');g.addColorStop(1,'#4a1a4a');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ for(let i=0;i<50;i++)R(hash(i,4)%W,hash(4,i)%90,1,1,'#fff9');cx.strokeStyle='#ffffff22';for(let i=1;i<=5;i++){cx.beginPath();cx.ellipse(W/2,H,W*.6,H*i/5,0,Math.PI,0);cx.stroke()}
+ R(0,118,W,40,'#2a1a3a');for(let x=0;x<W;x+=16)R(x,118,1,40,'#3a2a4a');
+ const ax=W/2;cx.strokeStyle='#f9c';cx.lineWidth=4;cx.beginPath();cx.arc(ax,108,44,Math.PI,0);cx.stroke();cx.lineWidth=1;for(let a=0;a<14;a++){const t=Math.PI+a/13*Math.PI;R(ax+Math.cos(t)*44-2,108+Math.sin(t)*44-2,4,4,['#fff','#ff6aa8','#ffd27a'][a%3])}
+ R(ax-46,108,4,48,'#ccc');R(ax+42,108,4,48,'#ccc');
+ const big=(look,X,Y,dir,s=3)=>{const c=document.createElement('canvas');c.width=16;c.height=24;drawChar(c.getContext('2d'),0,0,look,dir,0);cx.drawImage(c,X,Y,16*s,24*s)};
+ big(PLOOK,ax-46,86,1);big(m.wl,ax-2,86,3);
+ let gi=0;for(const n of NPCS){if(n.id==m.wid)continue;const X=24+gi*48+(gi>=3?W-24-7*48+48:0),Y=128;if(gi<3||gi>=3){const c=document.createElement('canvas');c.width=16;c.height=24;drawChar(c.getContext('2d'),0,0,n.look,2,Math.floor(tick/20+gi)%2?0:1);cx.drawImage(c,gi<3?14+gi*30:W-128+(gi-3)*28,120,24,36)}gi++}
+ for(let i=0;i<30;i++){const x=(hash(i,8)%W+Math.sin(tick/30+i)*12+W)%W,y=(hash(8,i)+tick*(.4+i%3*.2))%H;R(x,y,2,2,['#f9c','#fff','#ff6aa8'][i%3])}
+ for(let i=0;i<5;i++){const y=100-((tick+i*40)%160)*.5;txt('♥',ax-2+Math.sin((tick+i*40)/10)*10,y,'#ff6aa8',9,'center',0)}
+ txt('♥ WEDDING DAY ♥',W/2,22,'#ffd27a',12,'center','#6a1a2a')}

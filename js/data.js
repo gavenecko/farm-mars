@@ -72,5 +72,35 @@ const NPCS=[
   ev:{3:["OLD MO: The mine past the north ridge? I lost my partner down there on floor five.","OLD MO: Something big lives at the bottom. If you go... bring a good blade."],
    6:["OLD MO: Here. My old helmet lamp. It's lucky.","(Mo pats your shoulder. Max energy +10!)"]}},
 ];
+NPCS.push(
+ {id:'zara',n:'Zara',mar:1,look:{skin:'#8a5a3a',hair:'#3af0ff',style:'long',top:'#ff7a1a',pants:'#2a2a3a',acc:'#fff'},likes:['pla','koi','coffee','dst'],hates:['let'],
+  sched:[[6,'home',0,0],[8,'city',26,12],[12,'cafe',10,2],[15,'shop',8,4],[19,'city',26,9],[22,'home',0,0]],
+  lines:[["Zara, shuttle pilot. I fly the Phobos run twice a week. Don't touch my jacket."],["Storm Pepper chili is the only thing that keeps me awake on night flights."],["Ever seen Mars from orbit? It's all rust and scars. I love it."],["Next time I fly, I want you in the co-pilot seat. No arguments."]],
+  season:{Storm:"Storm season grounds every shuttle. I hate sitting still."},
+  ev:{3:["Zara is upside-down under a shuttle landing strut.","ZARA: Hold the light steady. ...Steady! Okay, good. You're useful.","She grins, grease on her nose."],6:["ZARA: I almost crashed once. Dust storm, zero visibility.","ZARA: I kept thinking about the colony lights. Something to come home to.","ZARA: Lately that's... the farm. You."],9:["Zara hands you a pair of old pilot wings.","ZARA: These were my first. I want you to have them.","ZARA: Fly with me. Always."]}},
+ {id:'theo',n:'Theo',mar:1,look:{skin:'#f0c8a0',hair:'#e8d070',style:'bob',top:'#3a4aa0',pants:'#2a2a4a',acc:'#bff'},likes:['crys','frb','eel','pie'],hates:['venom'],
+  sched:[[6,'home',0,0],[9,'cc',13,5],[13,'city',6,13],[18,'cafe',12,2],[22,'home',0,0]],
+  lines:[["Oh! Hi. Theo, colony astronomer. I mostly talk to telescopes."],["Did you know Phobos is falling toward Mars? Very slowly. Don't worry."],["I named a minor asteroid after your farm. It's tiny. Like a potato."],["The stars are nice. But I'd rather look at you. ...Did I say that out loud?"]],
+  season:{Frost:"Frost nights are clearest. Perfect for stargazing."},
+  ev:{3:["Theo shows you a smudge on a screen.","THEO: That's a comet. Nobody has seen it before. Except us now.","THEO: I'll call it Comet Farmer. Is that weird?"],6:["THEO: When I was little I wanted to live on a star.","THEO: Mars was close enough. And now it feels like... more than enough."],9:["Theo has built you a tiny telescope from scrap.","THEO: It points at Earth. So you can see where you came from...","THEO: ...and I can see where I want to stay. With you."]}},
+ {id:'vega',n:'Mayor Vega',look:{skin:'#6a4a3a',hair:'#eeeeee',style:'cap',top:'#7a1a3a',pants:'#1a1a2a',acc:'#ffd23a'},likes:['salad','stew','core','milk','cheese'],hates:['chit'],
+  sched:[[6,'home',0,0],[8,'cc',6,3],[12,'city',16,13],[17,'cafe',5,2],[21,'home',0,0]],
+  lines:[["Mayor Ines Vega. Welcome to New Cydonia, farmer. We need people like you."],["The Community Center bundles keep this colony running. Every bit helps."],["Food security is up twelve percent since you arrived. I checked."],["If I ever retire, I'd like you to run for mayor. I'm serious."]],
+  season:{Dust:"New season, new budget. Wish me luck."},
+  ev:{3:["MAYOR VEGA: Seventeen years ago, this plaza was a crater.","MAYOR VEGA: We built every wall by hand. Some of us didn't make it to see the dome lit."],6:["MAYOR VEGA: The council voted. Your farm is now an official colony landmark.","She shakes your hand firmly. (+500cr civic grant)"]}},
+ {id:'pip',n:'Pip',look:{skin:'#e0a878',hair:'#ff9a2a',style:'spiky',top:'#2ac87a',pants:'#3a5a8a',acc:'#ff4a4a'},likes:['egg','bun','chit','iron'],hates:['vmoss'],
+  sched:[[6,'home',0,0],[9,'city',9,13],[14,'farm',17,7],[17,'city',25,13],[20,'home',0,0]],
+  lines:[["I'm Pip! I'm eleven and a half and I'm building a robot. Got any bolts?"],["Your robot R0-V3R said hi to me! We're best friends now."],["When I grow up I'm gonna be a farmer AND a pilot AND an engineer."],["You're the coolest grown-up on Mars. Don't tell Mayor Vega."]],
+  season:{Bloom:"The Glowberries are glowing! Can I eat one? Please?"},
+  ev:{3:["Pip proudly shows you a robot made of bug chitin and ferrite.","PIP: It walks! ...Mostly sideways. But it walks!"],6:["PIP: My parents work nights at the reactor. Sometimes it's lonely.","PIP: Visiting your farm is the best part of my day."]}});
+const BDAY={ava:[0,3],kai:[1,2],ruiz:[2,4],mo:[3,5],zara:[3,2],theo:[1,5],vega:[0,6],pip:[2,1]};
+const FEST={ava:[12,13],kai:[19,9],ruiz:[22,12],mo:[17,13],zara:[24,11],theo:[8,12],vega:[26,13],pip:[8,10]};
+Object.assign(ITEMS,{egg:{n:'Dust Egg',v:50,c:'#f4ead8',food:20,d:'Laid by a Mars hen.'},milk:{n:'Red Goat Milk',v:120,c:'#f8f0ff',food:35,d:'Slightly pink. Very fresh.'},
+ omelet:{n:'Dome Omelet',v:180,c:'#fd6',food:65,d:'Fluffy and filling.'},cheese:{n:'Crater Cheese',v:320,c:'#fc4',food:50,d:'Aged in a lava tube.'},
+ frz:{n:'Cryo Shard',v:220,c:'#bdf',d:'Found in the Frozen Depths.'},
+ lance:{n:'Ion Lance',tool:1,wpn:1,c:'#6ff',p:1200,d:'Long-reach thrust weapon. 6 dmg.'},hammer:{n:'Gravity Hammer',tool:1,wpn:1,c:'#fa4',p:2800,d:'Smashes everything around you. 9 dmg, 3 energy.'}});
+RECIPES.push({id:'omelet',in:{egg:2,let:1},cook:1},{id:'cheese',in:{milk:2},cook:1});
+const ANIMALS={hen:{n:'Mars Hen',p:400,prod:'egg',every:1},goat:{n:'Red Goat',p:900,prod:'milk',every:2}};
+const RESEARCH=['iron','crys','cob','pla','frz','core','glowcap','lily','vmoss','chit','venom','carp','eel','koi','egg','milk'];
 const BUNDLES=[{n:'Farm Bundle',in:{pot:5,let:5,wht:5},r:600},{n:'Mineral Bundle',in:{iron:10,crys:3,cob:2},r:900},{n:'Surface Bundle',in:{glowcap:3,lily:3,chit:5},r:700},{n:'Deep Bundle',in:{pla:1,vmoss:2,core:1},r:3000}];
-const BUGS={crawler:{hp:3,spd:.6,dmg:8,c:'#7a3ccf',c2:'#b88cff',drop:'chit'},spitter:{hp:4,spd:.45,dmg:6,c:'#3a9a2a',c2:'#9f6',drop:'venom'},hopper:{hp:5,spd:.5,dmg:12,c:'#cf6a2a',c2:'#ffb070',drop:'chit'},queen:{hp:70,spd:.5,dmg:15,c:'#4ad8ff',c2:'#e0ffff',drop:'core',boss:1}};
+const BUGS={crawler:{hp:3,spd:.6,dmg:8,c:'#7a3ccf',c2:'#b88cff',drop:'chit'},spitter:{hp:4,spd:.45,dmg:6,c:'#3a9a2a',c2:'#9f6',drop:'venom'},hopper:{hp:5,spd:.5,dmg:12,c:'#cf6a2a',c2:'#ffb070',drop:'chit'},frostmite:{hp:9,spd:.75,dmg:14,c:'#5ab0e0',c2:'#e0f8ff',drop:'frz'},queen:{hp:70,spd:.5,dmg:15,c:'#4ad8ff',c2:'#e0ffff',drop:'core',boss:1}};
