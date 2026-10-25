@@ -31,9 +31,17 @@ function tileAt(x,y){const m=curMap();return m[y]&&m[y][x]}
 function solidAt(px_,py_){const x=Math.floor(px_/T),y=Math.floor(py_/T),t=tileAt(x,y);if(t===undefined)return true;if(isSolid(G.zone,t))return true;
  if(G.zone=='farm'&&G.objs[x+','+y])return true;
  if(G.zone=='surf'||G.zone=='mine')for(const e of ENTS)if(e.k=='ore'&&Math.abs(e.x-px_)<6&&Math.abs(e.y-py_)<5)return true;return false}
-function enter(zone,tx,ty,dir){G.zone=zone;G.px=tx*T+8;G.py=ty*T+8;if(dir!==undefined)G.dir=dir;sfx('door');PR=[];
+function enter(zone,tx,ty,dir){G.zone=zone;G.px=tx*T+8;G.py=ty*T+8;if(dir!==undefined)G.dir=dir;sfx('door');PR=[];toastT=0;
  if(zone=='surf'){G.o2=100;ENTS=SURF||(SURF=genSurface());toast('Airlock cycled. O2 refilled.')}
- else if(zone=='mine'){ENTS=MINE.E}else ENTS=[];placeNPCs(true)}
+ else if(zone=='mine'){ENTS=MINE.E}else ENTS=[];placeNPCs(true);unstick(false)}
+const TRIG='XDMuv';
+function feetFree(x,y){return !solidAt(x-5,y-3)&&!solidAt(x+5,y-3)&&!solidAt(x-5,y)&&!solidAt(x+5,y)}
+function openTile(tx,ty){const t=tileAt(tx,ty);if(t===undefined||isSolid(G.zone,t)||TRIG.includes(t))return false;if(!feetFree(tx*T+8,ty*T+8))return false;
+ let n=0;for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const u=tileAt(tx+a,ty+b);if(u!==undefined&&(!isSolid(G.zone,u)))n++}return n>=2}
+// nudge player to nearest walkable tile if inside a collider (or always when forced)
+function unstick(force){if(!force&&feetFree(G.px,G.py))return false;const sx=Math.floor(G.px/T),sy=Math.floor((G.py-2)/T);
+ for(let r=force?1:0;r<20;r++)for(let a=-r;a<=r;a++)for(let b=-r;b<=r;b++){if(Math.max(Math.abs(a),Math.abs(b))!=r)continue;if(openTile(sx+a,sy+b)){G.px=(sx+a)*T+8;G.py=(sy+b)*T+8;return true}}
+ G.zone='farm';G.px=13*T+8;G.py=9*T+8;ENTS=[];return true}
 function enterMine(f){G.floor=f;MINE=genMine(f);G.deep=Math.max(G.deep,f);if(MINE.boss&&G.bossDead){MINE.E=[];MINE.m[MINE.ly][MINE.lx]='v'}enter('mine',3,3,2);toast('Mine floor '+f+(MINE.boss&&!G.bossDead?' - something stirs...':''));if(MINE.boss&&!G.bossDead)sfx('roar')}
 function facingTile(){const d=DIRV[G.dir];return[Math.floor(G.px/T)+d[0],Math.floor((G.py-2)/T)+d[1]]}
 function useEnergy(n){if(G.energy<n){toast('Too tired... eat or sleep');sfx('bad');return false}G.energy-=n;return true}

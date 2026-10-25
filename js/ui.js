@@ -37,7 +37,7 @@ function menuTab(d){menu.tab=TABS[(TABS.indexOf(menu.tab)+d+4)%4];sfx('menu')}
 function menuTap(x,y){if(x>W-40&&y<34){closeMenu();return}if(y>14&&y<32){const i=Math.floor((x-20)/62);if(i>=0&&i<4){menu.tab=TABS[i];menu.pick=null;sfx('menu')}return}
  if(menu.tab=='bag'){const i=slotAt(x,y);if(i<0)return;if(menu.pick==null){menu.pick=i;if(i<10)G.sel=i}else{const a=G.inv[menu.pick];G.inv[menu.pick]=G.inv[i];G.inv[i]=a;menu.pick=null}sfx('menu')}
  if(menu.tab=='craft'){const i=Math.floor((y-40)/18);const rs=RECIPES;if(i>=0&&i<rs.length)craft(rs[i])}
- if(menu.tab=='system'){const i=Math.floor((y-44)/20);if(i==0){G.music=AU.music=!G.music}if(i==1){G.sfx=AU.sfx=!G.sfx}if(i==2)save();if(i==3){if(menu.confirm){localStorage.removeItem('farmmars2');localStorage.removeItem('farmmars1');G=newGame();boot();menu=null;toast('New game started')}else{menu.confirm=1;toast('Tap again to confirm NEW GAME')}}sfx('menu')}}
+ if(menu.tab=='system'){const i=Math.floor((y-44)/20);if(i==0){G.music=AU.music=!G.music}if(i==1){G.sfx=AU.sfx=!G.sfx}if(i==2)save();if(i==4){if(unstick(true)){toast('Moved to a safe spot');menu=null}}if(i==3){if(menu.confirm){localStorage.removeItem('farmmars2');localStorage.removeItem('farmmars1');G=newGame();boot();menu=null;toast('New game started')}else{menu.confirm=1;toast('Tap again to confirm NEW GAME')}}sfx('menu')}}
 function slotAt(x,y){const sx=(W-10*24)/2,sy=44;const c=Math.floor((x-sx)/24),r=Math.floor((y-sy)/24);return c>=0&&c<10&&r>=0&&r<3?r*10+c:-1}
 // ---------- update ----------
 let lastHour=-1;
@@ -60,7 +60,7 @@ function update(){tick++;if(toastT)toastT--;if(swingT)swingT--;if(invT)invT--;fo
  if(G.zone=='farm'){if(Math.random()<.006){robot.tx=(10+Math.random()*18)*T;robot.ty=(8+Math.random()*10)*T}robot.x+=Math.sign(robot.tx-robot.x)*.5;robot.y+=Math.sign(robot.ty-robot.y)*.5}
  if(G.zone=='surf'||G.zone=='mine')hostile();}
 function triggers(){const tx=Math.floor(G.px/T),ty=Math.floor((G.py-2)/T),t=tileAt(tx,ty),z=G.zone;
- if(t=='X'){if(z=='farm'&&tx>=30)enter('city',1,10,1);else if(z=='farm')enter('surf',31,41,0);else if(z=='city')enter('farm',30,10,3);else enter('farm',15,1,2)}
+ if(t=='X'){if(z=='farm'&&tx>=30)enter('city',1,10,1);else if(z=='farm')enter('surf',31,41,0);else if(z=='city')enter('farm',29,10,3);else enter('farm',15,1,2)}
  if(t=='D'){if(EXITS[z]){const e=EXITS[z];enter(e[0],e[1],e[2],2)}else{const d=DOORS[z+':'+tx+','+ty];if(d)enter(d[0],d[1],d[2],0)}}
  if(t=='M'){G.py+=T;if(G.deep>=6)say('Mine Elevator','Select a floor:',[{t:'Floor 1',f:()=>enterMine(1)},{t:'Floor 6',f:()=>enterMine(6)},{t:'Cancel'}]);else enterMine(1)}
  if(t=='u'){enter('surf',50,9,2)}
@@ -176,10 +176,10 @@ function overlays(ox,oy){const z=G.zone,s=season();
  if(z=='farm'||z=='surf'||z=='city'){cx.fillStyle=SEASON_TINT[s];cx.fillRect(0,0,W,H)}
  if(z=='surf'){const n=s=='Storm'?90:30,sp=s=='Storm'?3:.8;for(let i=0;i<n;i++){const x=(hash(i,7)%W+tick*sp*(1+i%3*.3))%W,y=(hash(7,i)%H+Math.sin(tick/50+i)*10+H)%H;R(x,y,i%4?1:2,1,s=='Storm'?'#c86a4aaa':'#e8a08a55')}}
  if(s=='Frost'&&(z=='farm'||z=='surf')){for(let i=0;i<40;i++){const x=(hash(i,3)%W),y=(hash(3,i)+tick*.5*(1+i%3))%H;R(x,y,1,1,'#fff8')}}
- if(z=='mine'){cx.fillStyle='rgba(40,20,80,.15)';cx.fillRect(0,0,W,H)}}
-function lighting(ox,oy){const z=G.zone,hr=G.time/60;let dark=hr<19?0:Math.min(.7,(hr-19)/5*.7);if(hr<6.5)dark=.5;
- if(EXITS[z])dark*=.35;if(z=='mine')dark=.82;if(z=='surf')dark=Math.min(.85,dark+.12);if(z=='city')dark*=.85;
- if(dark>.02){if(z=='mine'||(z=='surf'&&dark>.3))light(G.px-ox,G.py-10-oy,z=='mine'?78:60,'#ffe0a0');
+ if(z=='mine'){cx.fillStyle='rgba(40,20,80,.08)';cx.fillRect(0,0,W,H)}}
+function lighting(ox,oy){const z=G.zone,hr=G.time/60;let dark=hr<19?0:Math.min(.5,(hr-19)/5*.5);if(hr<6.5)dark=.38;
+ if(EXITS[z])dark*=.35;if(z=='mine')dark=.62;if(z=='surf')dark=Math.min(.6,dark+.06);if(z=='city')dark*=.85;
+ if(dark>.02){if(z=='mine'||(z=='surf'&&dark>.3))light(G.px-ox,G.py-10-oy,z=='mine'?110:80,'#ffe0a0');
   lx.globalCompositeOperation='source-over';lx.clearRect(0,0,W,H);lx.fillStyle=`rgba(8,2,24,${dark})`;lx.fillRect(0,0,W,H);lx.globalCompositeOperation='destination-out';
   for(const l of LIGHTS){const g=lx.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');lx.fillStyle=g;lx.fillRect(l.x-l.r,l.y-l.r,l.r*2,l.r*2)}
   cx.drawImage(lc,0,0)}
@@ -219,10 +219,10 @@ function drawMenu(){panel(12,8,W-24,H-16,'#120818f4','#ffb050');TABS.forEach((t,
  if(menu.tab=='social'){NPCS.forEach((n,i)=>{const Y=38+i*36;panel(24,Y,W-48,33,'#1a0e24','#6a4a6a');drawPortrait(cx,27,Y+1,n.look,2);const h=G.hearts[n.id];txt(n.n,62,Y+12,'#ffd27a',8);
   for(let j=0;j<10;j++)txt(j<Math.floor(h)?'♥':j<h?'♡':'·',62+j*9,Y+25,j<h?'#f6a':'#666',9);
   const st=G.spouse==n.id?'Spouse ♥':G.dating[n.id]?'Dating':n.mar?'Single':'';txt(st,W-30,Y+12,'#f8c',8,'right');txt(h>=4?'Likes: '+n.likes.map(k=>ITEMS[k].n).join(', '):'Likes: ??? (4♥)',W-30,Y+25,'#9ab',7,'right')})}
- if(menu.tab=='system'){['Music: '+(G.music?'ON':'OFF'),'Sound FX: '+(G.sfx?'ON':'OFF'),'Save game','New game'+(menu.confirm?' - TAP AGAIN TO CONFIRM':'')].forEach((l,i)=>{panel(60,44+i*20,W-120,17,'#1a0e24','#7a4a8a');txt(l,W/2,56+i*20,'#fff',8,'center')});
-  txt('Keys: WASD move · Space use · E act · 1-0 hotbar · M menu',W/2,H-30,'#aaa',7,'center');txt('Farm Mars v2 · saves automatically each night',W/2,H-19,'#777',7,'center')}}
+ if(menu.tab=='system'){['Music: '+(G.music?'ON':'OFF'),'Sound FX: '+(G.sfx?'ON':'OFF'),'Save game','New game'+(menu.confirm?' - TAP AGAIN TO CONFIRM':''),'Unstuck me (move to safe spot)'].forEach((l,i)=>{panel(60,44+i*20,W-120,17,'#1a0e24','#7a4a8a');txt(l,W/2,56+i*20,'#fff',8,'center')});
+  if(0)txt('Keys: WASD move · Space use · E act · 1-0 hotbar · M menu',W/2,H-30,'#aaa',7,'center');txt('Farm Mars v2 · saves automatically each night',W/2,H-19,'#777',7,'center')}}
 // ---------- boot ----------
-function boot(){ENTS=[];SURF=genSurface();MINE=null;for(const k in npcRT)delete npcRT[k];if(G.zone=='mine'){G.zone='surf';G.px=50*T+8;G.py=9*T+8}if(G.zone=='surf')ENTS=SURF;placeNPCs(true);AU.music=G.music;AU.sfx=G.sfx}
+function boot(){ENTS=[];SURF=genSurface();MINE=null;for(const k in npcRT)delete npcRT[k];if(G.zone=='mine'){G.zone='surf';G.px=50*T+8;G.py=9*T+8}if(G.zone=='surf')ENTS=SURF;placeNPCs(true);unstick(false);AU.music=G.music;AU.sfx=G.sfx}
 G=load()||newGame();boot();
 if(G.migrated){delete G.migrated;say('Farm Mars v2','Your v1 save was carried over: day, credits, crops, items and friendships. Tools were reset and new mechanics unlocked!')}
 else if(G.day==1&&G.time==360&&!localStorage.getItem('farmmars2'))say('Welcome to Farm Mars',['Sol 1, Dust season, year 2091. You inherited a dome farm outside New Cydonia.','Till soil with the Hoe, plant seeds, and water them every sol. Sleep in your habitat bed to end the day.','East gate: the neon city. North airlock: the Martian surface and the old mine. Tap MENU for your bag, crafting and friends.']);

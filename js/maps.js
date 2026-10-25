@@ -6,7 +6,7 @@ function fromStr(rows){const w=Math.max(...rows.map(r=>r.length));return rows.ma
 const MAPS={
  farm:mk(32,22,(x,y)=>{if(y==0&&x>=15&&x<=16)return 'X';if(x==31&&y>=10&&y<=11)return 'X';if(x==0||y==0||x==31||y==21)return 'W';
   if(x==5&&y==5)return 'D';if(x>=2&&x<=7&&y>=2&&y<=5)return 'H';if(x==9&&y==5)return 'B';if(x>=25&&x<=26&&y>=2&&y<=3)return 'T';
-  if((x==1||x==30)&&y%4==2)return 'L';if(y>=17&&x>=2&&x<=6&&(x+y)%2)return 'q';return 'g'}),
+  if((x==1||x==30)&&y%4==2)return 'L';if(y>=17&&x>=2&&x<=6&&(x+y)%2)return 'q';if(x>=20&&x<=25&&y>=15&&y<=18&&!((x==20||x==25)&&(y==15||y==18)))return 'P';return 'g'}),
  city:mk(32,22,(x,y)=>{if(x==0&&y>=10&&y<=11)return 'X';if(x==0||y==0||x==31||y==21)return 'W';
   for(const[a,b,d]of[[2,8,5],[11,18,14],[21,28,24]]){if(x==d&&y==5)return 'D';if(x>=a&&x<=b&&y>=1&&y<=5)return 'H'}
   if(x>=3&&x<=9&&y>=16&&y<=19)return 'A';if(x>=22&&x<=28&&y>=16&&y<=19)return (x+y)%3?'G':'g';
@@ -26,7 +26,7 @@ MAPS.surf=mk(64,44,(x,y)=>{if(y==43&&x>=31&&x<=32)return 'X';if(x==0||y==0||x==6
  if(h>990)return 'V';return 'r'});
 const SOLID=new Set(['W','H','B','T','F','R','L','A','w','k','b','p','t','s','e','c_','h','q_','j','O','S','q']);
 // interior counters are solid but interactable; 'c' is crater on surf (walkable), counter in interiors
-function isSolid(zone,t){if(t=='c')return zone!='surf';if(t=='q')return zone=='cc';return SOLID.has(t)}
+function isSolid(zone,t){if(t=='c')return zone!='surf';if(t=='p')return !!EXITS[zone];if(t=='P')return true;if(t=='q')return zone=='cc';return SOLID.has(t)}
 // door links: [zone,x,y] exterior door tile -> interior
 const DOORS={'farm:5,5':['home',5,6],'city:5,5':['cafe',6,6],'city:14,5':['shop',5,5],'city:24,5':['cc',7,6]};
 const EXITS={home:['farm',5,6],cafe:['city',5,6],shop:['city',14,6],cc:['city',24,6]};
