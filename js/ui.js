@@ -2,7 +2,11 @@
 const cv=document.getElementById('c'),cx=cv.getContext('2d');let S=1;
 const lc=document.createElement('canvas');lc.width=W;lc.height=H;const lx=lc.getContext('2d');
 function resize(){S=Math.min(innerWidth/W,innerHeight/H);cv.width=W;cv.height=H;cv.style.width=W*S+'px';cv.style.height=H*S+'px';cv.style.left=(innerWidth-W*S)/2+'px';cv.style.top=(innerHeight-H*S)/2+'px';cx.imageSmoothingEnabled=false}
-addEventListener('resize',resize);resize();
+addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,200));resize();
+function isFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
+function toggleFS(){const d=document,el=d.documentElement;try{if(isFS()){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else{const r=(el.requestFullscreen||el.webkitRequestFullscreen);if(r){const p=r.call(el,{navigationUI:'hide'});const lk=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}};if(p&&p.then)p.then(lk).catch(()=>toast('Fullscreen not allowed - try Add to Home screen'));else lk()}else toast('Use browser menu: Add to Home screen')}}catch(e){toast('Fullscreen unavailable')}setTimeout(resize,300)}
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>setTimeout(resize,100)));
+if('serviceWorker' in navigator&&location.protocol!='file:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 const txt=(s,x,y,c='#fff',sz=8,al='left',sh='#000')=>{cx.font=sz+'px monospace';cx.textAlign=al;if(sh){cx.fillStyle=sh;cx.fillText(s,x+1,y+1)}cx.fillStyle=c;cx.fillText(s,x,y)};
 const R=(x,y,w,h,c)=>px(cx,x,y,w,h,c);
 function panel(x,y,w,h,c='#140a1ce8',b='#ff6aa8'){R(x,y,w,h,b);R(x+1,y+1,w-2,h-2,c);R(x+1,y+1,w-2,1,'#fff2')}
@@ -17,7 +21,7 @@ addEventListener('keydown',e=>{firstInput();const k=e.key.toLowerCase();if(keys[
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
 function toGame(t){const r=cv.getBoundingClientRect();return[(t.clientX-r.left)/S,(t.clientY-r.top)/S]}
 function onTap(x,y){firstInput();if(modal){modalTap(x,y);return true}if(menu){menuTap(x,y);return true}
- if(x>W-46&&y<22){openMenu('bag');sfx('menu');return true}
+ if(x>W-68&&x<W-48&&y<22){toggleFS();return true}if(x>W-46&&y<22){openMenu('bag');sfx('menu');return true}
  if(y>HB.y-2&&x>=HB.x&&x<HB.x+10*HB.s){G.sel=Math.floor((x-HB.x)/HB.s);sfx('menu');return true}
  for(const k in BTN){const b=BTN[k];if(Math.hypot(x-b.x,y-b.y)<b.r+6){btnFx[k]=8;k=='A'?act():interact();return true}}return false}
 cv.addEventListener('touchstart',e=>{e.preventDefault();touchUI=true;for(const t of e.changedTouches){const[x,y]=toGame(t);if(onTap(x,y))continue;if(x<W*.55&&!joy.on)joy={on:true,id:t.identifier,ox:x,oy:y,dx:0,dy:0}}},{passive:false});
@@ -37,7 +41,7 @@ function menuTab(d){menu.tab=TABS[(TABS.indexOf(menu.tab)+d+4)%4];sfx('menu')}
 function menuTap(x,y){if(x>W-40&&y<34){closeMenu();return}if(y>14&&y<32){const i=Math.floor((x-20)/62);if(i>=0&&i<4){menu.tab=TABS[i];menu.pick=null;sfx('menu')}return}
  if(menu.tab=='bag'){const i=slotAt(x,y);if(i<0)return;if(menu.pick==null){menu.pick=i;if(i<10)G.sel=i}else{const a=G.inv[menu.pick];G.inv[menu.pick]=G.inv[i];G.inv[i]=a;menu.pick=null}sfx('menu')}
  if(menu.tab=='craft'){const i=Math.floor((y-40)/18);const rs=RECIPES;if(i>=0&&i<rs.length)craft(rs[i])}
- if(menu.tab=='system'){const i=Math.floor((y-44)/20);if(i==0){G.music=AU.music=!G.music}if(i==1){G.sfx=AU.sfx=!G.sfx}if(i==2)save();if(i==4){if(unstick(true)){toast('Moved to a safe spot');menu=null}}if(i==3){if(menu.confirm){localStorage.removeItem('farmmars2');localStorage.removeItem('farmmars1');G=newGame();boot();menu=null;toast('New game started')}else{menu.confirm=1;toast('Tap again to confirm NEW GAME')}}sfx('menu')}}
+ if(menu.tab=='system'){const i=Math.floor((y-44)/20);if(i==0){G.music=AU.music=!G.music}if(i==1){G.sfx=AU.sfx=!G.sfx}if(i==2)save();if(i==5)toggleFS();if(i==4){if(unstick(true)){toast('Moved to a safe spot');menu=null}}if(i==3){if(menu.confirm){localStorage.removeItem('farmmars2');localStorage.removeItem('farmmars1');G=newGame();boot();menu=null;toast('New game started')}else{menu.confirm=1;toast('Tap again to confirm NEW GAME')}}sfx('menu')}}
 function slotAt(x,y){const sx=(W-10*24)/2,sy=44;const c=Math.floor((x-sx)/24),r=Math.floor((y-sy)/24);return c>=0&&c<10&&r>=0&&r<3?r*10+c:-1}
 // ---------- update ----------
 let lastHour=-1;
@@ -205,7 +209,7 @@ function hud(){const z=G.zone;panel(3,3,124,z=='surf'||z=='mine'?47:38,'#0a0612d
  if(z=='surf'||z=='mine'){bar(7,34,G.o2,100,G.o2<25&&tick%20<10?'#f00':'#3cf','O2');if(G.o2<25)txt('LOW OXYGEN!',W/2,46,'#f44',9,'center')}
  const zn={farm:'Dome Farm',city:'New Cydonia',surf:'Martian Surface',home:'Your Habitat',cafe:'Red Dust Cafe',shop:'Supply & Tech',cc:'Community Center',mine:'Mine - Floor '+G.floor}[z];txt(zn,W/2,12,'#fff9',8,'center');
  const boss=ENTS.find(e=>e.t=='queen');if(boss){R(W/2-80,18,160,8,'#000');R(W/2-79,19,158*boss.hp/boss.max,6,'#4df');txt('CRYSTAL QUEEN',W/2,32,'#bff',7,'center')}
- R(W-46,3,43,19,'#ff6aa8');R(W-45,4,41,17,'#1a0a24');txt('MENU',W-24.5,16,'#fff',8,'center');
+ R(W-46,3,43,19,'#ff6aa8');R(W-45,4,41,17,'#1a0a24');txt('MENU',W-24.5,16,'#fff',8,'center');R(W-67,3,19,19,'#ffb050');R(W-66,4,17,17,'#1a0a24');{const c='#fff',a=W-63,b=7,o=isFS()?3:0;R(a+o,b+o,4,1,c);R(a+o,b+o,1,4,c);R(a+11-o,b+o,4,1,c);R(a+14-o,b+o,1,4,c);R(a+o,b+10+o-o*2,1,4,c);R(a+o,b+13-o,4,1,c);R(a+14-o,b+10-o,1,4,c);R(a+11-o,b+13-o,4,1,c)}
  for(let i=0;i<10;i++){const X=HB.x+i*HB.s,Y=HB.y;R(X,Y,HB.s-1,HB.s-1,i==G.sel?'#ffd27a':'#000c');R(X+1,Y+1,HB.s-3,HB.s-3,i==G.sel?'#4a2a3a':'#2a1a2acc');const s=G.inv[i];if(s){drawIcon(cx,s[0],X+2,Y+2);const it=ITEMS[s[0]];if(it.tool&&G.tools[s[0]]>1)R(X+2,Y+2,3,3,['','','#c96','#46f'][G.tools[s[0]]]);if(!it.tool)txt(s[1],X+HB.s-2,Y+HB.s-2,'#fff',7,'right')}}
  const s=cur();if(s)txt(ITEMS[s[0]].n+(G.tools[s[0]]?' ('+TOOL_TIER_NAMES[G.tools[s[0]]]+')':''),HB.x+105,HB.y-4,'#fff',7,'center');
  if(joy.on){cx.globalAlpha=.35;cx.fillStyle='#fff';cx.beginPath();cx.arc(joy.ox,joy.oy,26,0,6.3);cx.fill();cx.globalAlpha=.75;cx.beginPath();cx.arc(joy.ox+joy.dx*26,joy.oy+joy.dy*26,11,0,6.3);cx.fill();cx.globalAlpha=1}
@@ -230,7 +234,7 @@ function drawMenu(){panel(12,8,W-24,H-16,'#120818f4','#ffb050');TABS.forEach((t,
  if(menu.tab=='social'){NPCS.forEach((n,i)=>{const Y=38+i*36;panel(24,Y,W-48,33,'#1a0e24','#6a4a6a');drawPortrait(cx,27,Y+1,n.look,2);const h=G.hearts[n.id];txt(n.n,62,Y+12,'#ffd27a',8);
   for(let j=0;j<10;j++)txt(j<Math.floor(h)?'♥':j<h?'♡':'·',62+j*9,Y+25,j<h?'#f6a':'#666',9);
   const st=G.spouse==n.id?'Spouse ♥':G.dating[n.id]?'Dating':n.mar?'Single':'';txt(st,W-30,Y+12,'#f8c',8,'right');txt(h>=4?'Likes: '+n.likes.map(k=>ITEMS[k].n).join(', '):'Likes: ??? (4♥)',W-30,Y+25,'#9ab',7,'right')})}
- if(menu.tab=='system'){['Music: '+(G.music?'ON':'OFF'),'Sound FX: '+(G.sfx?'ON':'OFF'),'Save game','New game'+(menu.confirm?' - TAP AGAIN TO CONFIRM':''),'Unstuck me (move to safe spot)'].forEach((l,i)=>{panel(60,44+i*20,W-120,17,'#1a0e24','#7a4a8a');txt(l,W/2,56+i*20,'#fff',8,'center')});
+ if(menu.tab=='system'){['Music: '+(G.music?'ON':'OFF'),'Sound FX: '+(G.sfx?'ON':'OFF'),'Save game','New game'+(menu.confirm?' - TAP AGAIN TO CONFIRM':''),'Unstuck me (move to safe spot)','Fullscreen: '+(isFS()?'ON':'OFF')].forEach((l,i)=>{panel(60,44+i*20,W-120,17,'#1a0e24','#7a4a8a');txt(l,W/2,56+i*20,'#fff',8,'center')});
   if(0)txt('Keys: WASD move · Space use · E act · 1-0 hotbar · M menu',W/2,H-30,'#aaa',7,'center');txt('Farm Mars v2 · saves automatically each night',W/2,H-19,'#777',7,'center')}}
 // ---------- boot ----------
 function boot(){ENTS=[];SURF=genSurface();MINE=null;for(const k in npcRT)delete npcRT[k];if(G.zone=='mine'){G.zone='surf';G.px=50*T+8;G.py=9*T+8}if(G.zone=='surf')ENTS=SURF;placeNPCs(true);unstick(false);AU.music=G.music;AU.sfx=G.sfx}
