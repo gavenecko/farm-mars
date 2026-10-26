@@ -24,6 +24,7 @@ function drawTile(g,z,t,v){
   if(t=='M'){px(g,0,0,T,T,'#1a0510');px(g,2,4,12,12,'#000');px(g,2,4,12,2,'#5a2030');px(g,3,0,2,16,'#6a4a2a');px(g,11,0,2,16,'#6a4a2a');px(g,3,1,10,2,'#8a6a3a')}}
  else if(z=='mine'){if(t=='R'){px(g,0,0,T,T,'#14101e');return}dither(g,'#2a2236','#1e1828','#3a3048',v,16);
   if(t=='u'||t=='v'){px(g,3,0,2,T,'#8a6a3a');px(g,11,0,2,T,'#8a6a3a');for(let i=2;i<T;i+=4)px(g,3,i,10,2,'#b08a50');if(t=='v'){px(g,2,0,12,T,'#0008');px(g,3,0,2,T,'#8a6a3a');px(g,11,0,2,T,'#8a6a3a');for(let i=2;i<T;i+=4)px(g,3,i,10,2,'#b08a50')}}}
+ else if(z=='valles'){if(t=='R'){px(g,0,0,T,T,'#3a140a');return}const b=t=='y'?'#a8603a':'#8a4426';dither(g,b,shade(b,-.22),shade(b,.18),v,16);px(g,0,(v*5)%T,T,1,shade(b,-.12));if(t=='y'){px(g,2,4,12,1,shade(b,.25));px(g,4,9,10,1,shade(b,.25))}if(v==2){px(g,9,5,3,2,'#5a2010');px(g,9,5,3,1,'#c8784a')}if(t=='X'){px(g,0,0,T,T,'#3a3a44');px(g,1,1,14,14,'#22222a');for(let i=2;i<14;i+=3)px(g,2,i,12,1,'#fa2')}if(t=='V'){px(g,3,3,10,10,'#2a0a14');px(g,5,5,6,6,'#ff6a20');px(g,6,6,4,4,'#ffd060')}}
  else{// interiors
   const wood=z=='cafe'?['#6a3a2a','#5a2e20','#7a4a32']:z=='shop'?['#3a4a5a','#2e3a48','#4a5a6a']:z=='cc'?['#5a4a3a','#4a3a2e','#6a5a48']:['#8a5a3a','#7a4a2e','#9a6a48'];
   if(t=='w'){px(g,0,0,T,T,z=='shop'?'#1a2a3a':z=='cafe'?'#3a1a1a':'#c8b8a0');px(g,0,10,T,6,z=='shop'?'#0a1a2a':z=='cafe'?'#2a0a0a':'#a89878');px(g,0,10,T,1,'#0003');if(v==2&&z!='shop'){px(g,4,2,8,6,'#9ef');px(g,4,2,8,1,'#fff');px(g,7,2,1,6,'#6ab')}return}

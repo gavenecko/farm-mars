@@ -1,7 +1,7 @@
 // Farm Mars v2 - core logic
 const W=384,H=216;
 const PLOOK={skin:'#f0c090',hair:'#8a3a1a',style:'cap',top:'#2a8a6a',pants:'#3a3a5a',acc:'#ffb020'};
-let SLOT=1,EMO={},FADE=0;const slotKey=s=>s==1?'farmmars2':'farmmars2_'+s;
+let VALL=null,SLOT=1,EMO={},FADE=0;const slotKey=s=>s==1?'farmmars2':'farmmars2_'+s;
 let G,ENTS=[],SURF=null,MINE=null,PR=[],P=[],FT=[],tick=0,anim=0,swingT=0,swingId=null,invT=0,npcRT={},robot={x:15*T,y:12*T,tx:15*T,ty:12*T};
 const DIRV=[[0,-1],[1,0],[0,1],[-1,0]];
 function newGame(){return{v:2,day:1,time:360,money:400,energy:100,maxEn:100,hp:100,o2:100,zone:'farm',px:12*T+8,py:9*T+8,dir:2,sel:0,
@@ -18,8 +18,8 @@ const season=(d=G.day)=>SEASONS[Math.floor((d-1)/SOLS_PER_SEASON)%4],seasonIdx=(
 // ---------- inventory ----------
 function add(id,q=1){for(const s of G.inv)if(s&&s[0]==id&&!ITEMS[id].tool){s[1]+=q;return true}const i=G.inv.findIndex(s=>!s);if(i<0){toast('Bag full!');sfx('bad');return false}G.inv[i]=[id,q];return true}
 function take(i,q=1){const s=G.inv[i];s[1]-=q;if(s[1]<=0)G.inv[i]=null}
-const cur=()=>G.inv[G.sel],cnt=id=>G.inv.reduce((a,s)=>a+(s&&s[0]==id?s[1]:0),0);
-function rem(id,q){for(let i=0;i<30&&q>0;i++){const s=G.inv[i];if(s&&s[0]==id){const t=Math.min(q,s[1]);take(i,t);q-=t}}}
+const cur=()=>G.inv[G.sel],cnt=id=>G.inv.reduce((a,s)=>a+(s&&(s[0]==id||ITEMS[s[0]].base==id)?s[1]:0),0);
+function rem(id,q){for(let i=0;i<30&&q>0;i++){const s=G.inv[i];if(s&&(s[0]==id||ITEMS[s[0]].base==id)){const t=Math.min(q,s[1]);take(i,t);q-=t}}}
 const hasAll=inn=>Object.entries(inn).every(([i,q])=>cnt(i)>=q);
 // ---------- messages ----------
 let modal=null,toastT=0,toastS='',menu=null;function toast(s){toastS=s;toastT=150}
@@ -29,15 +29,15 @@ function parts(x,y,c,n=8,sp=1.5){for(let i=0;i<n;i++)P.push({x,y,vx:(Math.random
 // ---------- world ----------
 function curMap(){return G.zone=='mine'?MINE.m:MAPS[G.zone]}
 function tileAt(x,y){const m=curMap();return m[y]&&m[y][x]}
-function solidAt(px_,py_){const x=Math.floor(px_/T),y=Math.floor(py_/T),t=tileAt(x,y);if(t===undefined)return true;if(isSolid(G.zone,t))return true;
+function solidAt(px_,py_){const x=Math.floor(px_/T),y=Math.floor(py_/T),t=tileAt(x,y);if(t===undefined)return true;if(isSolid(G.zone,t)||G.zone=='surf'&&t=='c'&&isPool(x,y))return true;
  if(G.zone=='farm'&&G.objs[x+','+y])return true;
- if(G.zone=='surf'||G.zone=='mine')for(const e of ENTS)if(e.k=='ore'&&Math.abs(e.x-px_)<6&&Math.abs(e.y-py_)<5)return true;return false}
+ if(OUTZ(G.zone))for(const e of ENTS)if(e.k=='ore'&&Math.abs(e.x-px_)<6&&Math.abs(e.y-py_)<5)return true;return false}
 function enter(zone,tx,ty,dir){FADE=18;G.zone=zone;G.px=tx*T+8;G.py=ty*T+8;if(dir!==undefined)G.dir=dir;sfx('door');PR=[];toastT=0;
  if(zone=='surf'){G.o2=100;ENTS=SURF||(SURF=genSurface());toast('Airlock cycled. O2 refilled.')}
- else if(zone=='mine'){ENTS=MINE.E}else ENTS=[];placeNPCs(true);unstick(false)}
+ else if(zone=='mine'){ENTS=MINE.E}else if(zone=='valles'){G.o2=100;ENTS=VALL||(VALL=genValles())}else ENTS=[];placeNPCs(true);unstick(false)}
 const TRIG='XDMuv';
 function feetFree(x,y){return !solidAt(x-5,y-3)&&!solidAt(x+5,y-3)&&!solidAt(x-5,y)&&!solidAt(x+5,y)}
-function openTile(tx,ty){const t=tileAt(tx,ty);if(t===undefined||isSolid(G.zone,t)||TRIG.includes(t))return false;if(!feetFree(tx*T+8,ty*T+8))return false;
+function openTile(tx,ty){const t=tileAt(tx,ty);if(t===undefined||isSolid(G.zone,t)||G.zone=='surf'&&t=='c'&&isPool(tx,ty)||TRIG.includes(t))return false;if(!feetFree(tx*T+8,ty*T+8))return false;
  let n=0;for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const u=tileAt(tx+a,ty+b);if(u!==undefined&&(!isSolid(G.zone,u)))n++}return n>=2}
 // nudge player to nearest walkable tile if inside a collider (or always when forced)
 function unstick(force){if(!force&&feetFree(G.px,G.py))return false;const sx=Math.floor(G.px/T),sy=Math.floor((G.py-2)/T);
@@ -51,7 +51,7 @@ function targetTiles(tool){const[fx,fy]=facingTile(),d=DIRV[G.dir],tier=G.tools[
  if(tier==2)out.push([fx+d[0],fy+d[1]],[fx+2*d[0],fy+2*d[1]]);
  if(tier==3){out.length=0;const cx_=fx+d[0],cy=fy+d[1];for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)out.push([cx_+a,cy+b])}return out}
 const mature=t=>t&&t.c&&t.g>=CROPS[t.c].days;
-function harvest(k){const t=G.tiles[k],c=t.c;if(!add(c))return false;addXP('farm',6);if(Math.random()<[0,.2,.4][perk('farm')])add(c);const[x,y]=k.split(',').map(Number);parts(x*T+8,y*T+8,CROPS[c].c,10);floatTxt(x*T+8,y*T,'+'+CROPS[c].n,'#bfa');sfx('harvest');G.stats.harvest++;
+function harvest(k){const t=G.tiles[k],c=t.c;if(!add(qualId(c)))return false;addXP('farm',6);if(Math.random()<[0,.2,.4][perk('farm')])add(c);const[x,y]=k.split(',').map(Number);parts(x*T+8,y*T+8,CROPS[c].c,10);floatTxt(x*T+8,y*T,'+'+CROPS[c].n,'#bfa');sfx('harvest');G.stats.harvest++;
  if(CROPS[c].re){t.g=CROPS[c].days-CROPS[c].re}else{t.c=null;t.g=0}return true}
 let FISHING=null;
 function startFish(){FISHING={ph:'wait',t:0,bite:60+Math.random()*120};sfx('water');toast('Casting... wait for a bite, then press USE')}
@@ -74,18 +74,18 @@ function act(){if(FISHING){fishAct();return}if(swingT>4)return;const s=cur();con
     else{const t=G.tiles[kk];if(t){t.w=1;t.dry=0;parts(x*T+8,y*T+8,'#6cf',5,1)}}}
    sfx(id=='hoe'?'till':'water');return}
   if(id=='pick'||id=='blade'||it.wpn){swing(id);sfx('swing');return}}
- if(G.zone=='surf'||G.zone=='mine'){if(id!='pick'&&id!='blade'&&id!='hoe'&&!it.wpn){toast('Equip pickaxe or a weapon');return}
+ if(OUTZ(G.zone)){if(id!='pick'&&id!='blade'&&id!='hoe'&&!it.wpn){toast('Equip pickaxe or a weapon');return}
   if(!useEnergy(id=='pick'?2:id=='hammer'?3:1))return;swing(id);sfx('swing');const d=DIRV[G.dir],reach=id=='lance'?24:id=='hammer'?0:12,ax=G.px+d[0]*reach,ay=G.py-4+d[1]*reach;if(id=='hammer'){parts(G.px,G.py-2,'#fa4',18,2.5);sfx('break')}
   const pd=[0,1,2,4][G.tools.pick]+(perk('mine')?1:0),cb=perk('combat')?2:0,bd=[0,2,4,7][G.tools.blade]+cb;
-  for(const e of ENTS){if(e.dead)continue;const r=(e.t=='queen'?26:15)+(id=='hammer'?14:id=='lance'?3:0);if(Math.hypot(e.x-ax,e.y-4-ay)>r)continue;
+  for(const e of ENTS){if(e.dead||e.under)continue;const r=(e.t=='queen'||e.t=='wyrm'?26:15)+(id=='hammer'?14:id=='lance'?3:0);if(Math.hypot(e.x-ax,e.y-4-ay)>r)continue;
    if(e.k=='ore'){if(id=='pick'){e.hp-=pd;sfx('clink');parts(e.x,e.y-4,ITEMS[e.t]?ITEMS[e.t].c:'#887',5);if(e.hp<=0){e.dead=1;sfx('break');G.stats.mined++;addXP('mine',4);
      if(e.t=='stone'){if(Math.random()<.3)add('iron')}else{const q=(e.t=='iron'?2:1)+(perk('mine')>=2?1:0);add(e.t,q);floatTxt(e.x,e.y-10,'+'+q+' '+ITEMS[e.t].n,'#9ef')}}}else{sfx('clink');floatTxt(e.x,e.y-10,'clang','#888')}}
    if(e.k=='bug'){const dmg=id=='blade'?bd:id=='lance'?6+cb:id=='hammer'?9+cb:Math.max(1,pd-1);e.hp-=dmg;e.hit=8;const a=Math.atan2(e.y-G.py,e.x-G.px),kb=e.t=='queen'?.5:4;e.vx=Math.cos(a)*kb;e.vy=Math.sin(a)*kb;sfx('hit');parts(e.x,e.y-4,BUGS[e.t].c2,6);floatTxt(e.x,e.y-14,'-'+dmg,'#ff8');
     if(e.hp<=0)killBug(e)}}
-  ENTS=ENTS.filter(e=>!e.dead);if(G.zone=='mine')MINE.E=ENTS;else SURF=ENTS;return}
+  ENTS=ENTS.filter(e=>!e.dead);storeE();return}
  if(id=='pick'||id=='blade'||id=='hoe'||id=='can'){swing(id);sfx('swing')}}
 function killBug(e){e.dead=1;G.stats.bugs++;const b=BUGS[e.t];addXP('combat',b.boss?150:8);parts(e.x,e.y,b.c2,16,2.5);sfx('break');
- if(b.boss){G.bossDead=1;add('core');G.money+=1000;MINE.m[MINE.ly][MINE.lx]='v';say('VICTORY','The Crystal Queen shatters into a thousand singing shards! You found the Queen Core and 1000cr of crystal dust. A ladder leads deeper...',[{t:'Roll the credits',f:()=>rollCredits('game')},{t:'Continue'}]);sfx('wed');setMusic('mine')}
+ if(e.t=='wyrm'){wyrmDie(e)}else if(b.boss){G.bossDead=1;add('core');G.money+=1000;MINE.m[MINE.ly][MINE.lx]='v';say('VICTORY','The Crystal Queen shatters into a thousand singing shards! You found the Queen Core and 1000cr of crystal dust. A ladder leads deeper...',[{t:'Roll the credits',f:()=>rollCredits('game')},{t:'Continue'}]);sfx('wed');setMusic('mine')}
  else if(Math.random()<.7){add(b.drop);floatTxt(e.x,e.y-10,'+'+ITEMS[b.drop].n,'#c9f')}}
 function swing(id){swingT=14;swingId=id}
 function consume(){const s=cur();if(!s)return;const it=ITEMS[s[0]];
@@ -98,7 +98,7 @@ function nearNPC(){for(const id in npcRT){const n=npcRT[id];if(n.zone==G.zone&&M
 function interact(){const n=nearNPC();if(n){talk(n);return}
  const[fx,fy]=facingTile(),t=tileAt(fx,fy),k=fx+','+fy,z=G.zone;
  if(z=='farm'&&mature(G.tiles[k])){harvest(k);return}
- if(z=='surf'||z=='mine'){for(const e of ENTS)if(e.k=='plant'&&!e.dead&&Math.hypot(e.x-G.px,e.y-G.py)<20){e.dead=1;add(e.t);addXP('forage',6);if(Math.random()<(perk('forage')?.3:0))add(e.t);sfx('harvest');floatTxt(e.x,e.y-10,'+'+ITEMS[e.t].n,'#bfa');ENTS=ENTS.filter(q=>!q.dead);if(z=='mine')MINE.E=ENTS;else SURF=ENTS;return}}
+ if(OUTZ(z)){for(const e of ENTS)if(e.k=='plant'&&!e.dead&&Math.hypot(e.x-G.px,e.y-G.py)<20){e.dead=1;add(e.t);addXP('forage',6);if(Math.random()<(perk('forage')?.3:0))add(e.t);sfx('harvest');floatTxt(e.x,e.y-10,'+'+ITEMS[e.t].n,'#bfa');ENTS=ENTS.filter(q=>!q.dead);storeE();return}}
  if(z=='farm'){const an=G.animals.find(a=>Math.hypot(a.x-G.px,a.y-G.py)<20);if(an){petAnimal(an);return}if(t=='N'){barnInfo();return}}
  if(z=='city'&&t=='Q'){boardMenu();return}
  if(z=='farm'){if(Math.hypot(robot.x-G.px,robot.y-G.py)<22){say('R0-V3R',['*beep boop* Good sol, farmer!',['I water 3 dry crops every morning.','Sprinklers make my job easier. Craft them in the MENU!','Crops left dry 2 sols will wilt. 3 sols... *sad beep*','Each season lasts '+SOLS_PER_SEASON+' sols. Plant what is in season!'][G.day%4]]);sfx('talk');return}
@@ -110,7 +110,7 @@ function interact(){const n=nearNPC();if(n){talk(n);return}
  if(z=='cafe'&&(t=='c'||t=='s')){cafeMenu();return}
  if(z=='shop'&&(t=='c'||t=='s'||t=='h')){shopMenu();return}
  if(z=='cc'){if(t=='q'){bundleMenu();return}if(t=='j'){openMenu('craft');return}}
- if(z=='city'&&t=='F'&&isFestival()&&!G.feast){G.feast=G.day;G.energy=G.maxEn;add('pie');sfx('wed');say('Founders\' Festival Feast','The colony shares a feast around the fountain. You eat your fill (energy restored) and take home a Moonmelon Pie!');return}
+ if(z=='city'&&t=='F'&&isFestival()&&!G.feast&&seasonIdx()){festAct();return}if(z=='city'&&t=='F'&&isFestival()&&!G.feast){G.feast=G.day;G.energy=G.maxEn;add('pie');sfx('wed');say('Founders\' Festival Feast','The colony shares a feast around the fountain. You eat your fill (energy restored) and take home a Moonmelon Pie!');return}
  if(z=='city'){if(t=='F')say('Fountain','Recycled colony water. A plaque reads "New Cydonia, est. 2079".'+(Object.keys(G.bundles).length>=2?' The restored lights dance in rainbow colors.':''));if(t=='A')say('Habitat Row','Residential pods. The neighbors are asleep. Probably.');if(t=='S')say('Bench','You sit for a moment and watch the neon flicker.')}
  if(z=='surf'&&t=='O')say('Alien Obelisk','Ancient glyphs glow beneath the dust. Nobody knows who built these.')}
 // menus as dialog options
@@ -127,7 +127,7 @@ function upgMenu(){const o=[];for(const tl of['hoe','can','pick','blade']){const
   o.push({t:ITEMS[tl].n+' > '+TOOL_TIER_NAMES[nt]+' '+u.cr+'cr+'+Object.entries(u.in).map(([i,q])=>q+' '+ITEMS[i].n.split(' ')[0]).join(','),f:()=>{if(G.money>=u.cr&&hasAll(u.in)){G.money-=u.cr;for(const[i,q]of Object.entries(u.in))rem(i,q);G.tools[tl]=nt;sfx('craft');toast(ITEMS[tl].n+' upgraded!')}else{toast('Need more credits/materials');sfx('bad')}upgMenu()}})}
  o.push({t:'Back',f:shopMenu});say('Tool Bench','Hoe/Can: Ferrite = 3 tiles, Cobalt = 3x3. Pick/Blade: more damage.',o)}
 function sellHeld(){const s=cur();if(s&&ITEMS[s[0]].v&&!ITEMS[s[0]].tool){const v=ITEMS[s[0]].v*s[1];G.money+=v;toast('Sold for '+v+'cr');G.inv[G.sel]=null;sfx('coin')}else{toast('Hold something sellable');sfx('bad')}}
-function sellAll(){let v=0;G.inv.forEach((s,i)=>{if(s){const it=ITEMS[s[0]];if((it.crop||['iron','crys','cob','pla','glowcap','lily','vmoss','chit','venom','frz','egg','milk'].includes(s[0]))){v+=it.v*s[1];G.inv[i]=null}}});G.money+=v;toast(v?'Sold for '+v+'cr':'Nothing to sell');if(v)sfx('coin')}
+function sellAll(){let v=0;G.inv.forEach((s,i)=>{if(s){const it=ITEMS[s[0]];if((it.crop||['iron','crys','cob','pla','glowcap','lily','vmoss','chit','venom','frz','egg','milk','jasp','opal','saltb','scale'].includes(s[0]))){v+=it.v*s[1];G.inv[i]=null}}});G.money+=v;toast(v?'Sold for '+v+'cr':'Nothing to sell');if(v)sfx('coin')}
 function buy(id,q=1){const p=ITEMS[id].p*q;if(G.money<p){toast('Not enough credits');sfx('bad');return}if(add(id,q)){G.money-=p;sfx('coin');toast('Bought '+q+' '+ITEMS[id].n)}}
 function cafeMenu(){const kai=npcRT.kai&&npcRT.kai.zone=='cafe';say('Red Dust Cafe',kai?'KAI: "What can I get you?"':'A self-serve kiosk blinks at you.',[{t:'Red Dust Latte 30cr',f:()=>{buy('coffee');cafeMenu()}},{t:'Cydonia Bun 25cr',f:()=>{buy('bun');cafeMenu()}},{t:'Leave'}],kai?NPCS[1].look:null)}
 function cookMenu(){const o=RECIPES.filter(r=>r.cook).map(r=>({t:ITEMS[r.id].n+': '+Object.entries(r.in).map(([i,q])=>q+' '+ITEMS[i].n).join(', '),f:()=>{craft(r);cookMenu()}}));o.push({t:'Done'});say('Kitchen','What should we cook?',o)}
@@ -143,15 +143,15 @@ function heartsCap(n){return n.mar&&!G.dating[n.id]&&G.spouse!=n.id?8:10}
 function addHearts(n,v){G.hearts[n.id]=Math.max(0,Math.min(heartsCap(n),G.hearts[n.id]+v))}
 function talk(n){const r=npcRT[n.id];r.dir=Math.abs(G.px-r.x)>Math.abs(G.py-r.y)?(G.px>r.x?1:3):(G.py>r.y?2:0);sfx('talk');
  const h=G.hearts[n.id],key=n.id+G.day;
- for(const lv of[3,6,9])if(h>=lv&&n.ev[lv]&&!G.events[n.id+lv]){G.events[n.id+lv]=1;say(n.n+' ♥ Event',n.ev[lv],[{t:'♥',f:()=>{sfx('heart');addHearts(n,.5);if(n.id=='mo'&&lv==6){G.maxEn+=10}if(n.id=='vega'&&lv==6){G.money+=500}}}],n.look);return}
+ for(const lv of[3,4,6,7,9])if(h>=lv&&n.ev[lv]&&!G.events[n.id+lv]){G.events[n.id+lv]=1;say(n.n+' ♥ Event',n.ev[lv],[{t:'♥',f:()=>{sfx('heart');addHearts(n,.5);if(n.id=='mo'&&lv==6){G.maxEn+=10}if(n.id=='vega'&&lv==6){G.money+=500}}}],n.look);return}
  const opts=[{t:'Chat',f:()=>chat(n)}];const s=cur();if(s&&!ITEMS[s[0]].tool)opts.push({t:'Give '+ITEMS[s[0]].n,f:()=>gift(n)});opts.push({t:'Bye'});
  const greet=G.spouse==n.id?['Hey, love.','There you are! I missed you.','Welcome home, farmer.'][G.day%3]:h<2?'Oh, hello.':h<5?'Hey, good to see you!':h<8?'Hi! I was hoping you\'d come by.':'*smiles brightly* Hi you.';
  say(n.n,greet,opts,n.look)}
-function chat(n){const key=n.id+G.day,first=!G.talked[key];if(first&&isFestival()&&npcRT[n.id].zone=='city'&&Math.floor(G.time/60)>=9&&Math.floor(G.time/60)<16){G.talked[key]=1;addHearts(n,1.4);sfx('heart');say(n.n,['Happy Founders\' Festival! The whole colony is out tonight.',['Dance with me later?','Try the festival feast at the fountain!','Seventeen years since the first dome. Look how far we came.'][G.day%3]],null,n.look);return}if(first){G.talked[key]=1;addHearts(n,.4);emote(n.id,'note')}
+function chat(n){const key=n.id+G.day,first=!G.talked[key];if(first&&isFestival()&&npcRT[n.id].zone=='city'&&Math.floor(G.time/60)>=9&&Math.floor(G.time/60)<16){G.talked[key]=1;addHearts(n,1.4);sfx('heart');say(n.n,['Happy '+festName()+'! The whole colony is out tonight.',['Dance with me later?','Try the festival feast at the fountain!','Seventeen years since the first dome. Look how far we came.'][G.day%3]],null,n.look);return}if(first){G.talked[key]=1;addHearts(n,.4);emote(n.id,'note')}
  let l;if(G.spouse==n.id){l=[["Morning! I watered a few crops for you.","Don't overdo it on the surface, okay?"],["I love our little dome life.","Remember our wedding? The whole plaza glowed."],["Let's watch Phobos rise tonight.","You're the best thing that happened to me on Mars."]][G.day%3];if(first){G.energy=Math.min(G.maxEn,G.energy+15);sfx('heart')}}
  else{const tier=Math.min(3,Math.floor(G.hearts[n.id]/2.5)),ls=n.lines[tier];l=[ls[G.day%ls.length]];if(n.season&&n.season[season()]&&G.day%2)l.push(n.season[season()])}
  say(n.n,l,null,n.look)}
-function gift(n){const s=cur(),id=s[0],key=n.id+G.day;
+function gift(n){const s=cur(),id=ITEMS[s[0]].base||s[0],key=n.id+G.day;
  if(id=='bouquet'){if(!n.mar){say(n.n,"Flowers? That's sweet, but I'm happily single.",null,n.look);return}if(G.hearts[n.id]<8){say(n.n,'Oh... I think we should get to know each other better first.',null,n.look);return}
   take(G.sel);G.dating[n.id]=1;sfx('heart');say(n.n,['...For me? You mean... like, DATING?','*'+n.n+' laughs and hugs you tight*','Yes! Absolutely yes.'],null,n.look);return}
  if(id=='pendant'){if(!G.dating[n.id]){say(n.n,'A pendant? We should be dating first...',null,n.look);return}if(G.hearts[n.id]<10){say(n.n,'I love you, but... give us a little more time. (10 hearts)',null,n.look);return}
@@ -172,12 +172,12 @@ function sleep(passed){sfx('sleep');let earn=0;for(const[i,q]of G.ship)earn+=ITE
  const prod=animalsMorning();let kidMsg='';if(G.spouse&&!G.kids&&G.day-G.wedDay>=7&&G.hearts[G.spouse]>=10){G.kids=1;G.kidDay=G.day;kidMsg='Big news! You and '+NPCS.find(q=>q.id==G.spouse).n+' welcomed a baby into your habitat. Welcome to the colony, little one!'}
  genReq(true);const bdn=NPCS.filter(q=>isBday(q,G.day));
  let spouseMsg='';if(G.spouse){const sn=NPCS.find(q=>q.id==G.spouse),roll=G.day%3;if(roll==0){for(const k in G.tiles)if(G.tiles[k].c){G.tiles[k].w=1;G.tiles[k].dry=0}spouseMsg=sn.n+' watered all the crops before you woke up.'}else if(roll==1){add(sn.id=='kai'?'pie':'stew');spouseMsg=sn.n+' cooked you something. Check your bag!'}else{add(sn.id=='ava'?'crys':'coffee',2);spouseMsg=sn.n+' left a gift by the bed.'}}
- G.time=360;G.energy=passed?Math.round(G.maxEn*.6):G.maxEn;G.hp=100;G.o2=100;G.zone='home';G.px=8*T+8;G.py=3*T+8;G.dir=2;ENTS=[];SURF=genSurface();PR=[];G.talked={};G.gifted={};
+ VALL=null;G.time=360;G.energy=passed?Math.round(G.maxEn*.6):G.maxEn;G.hp=100;G.o2=100;G.zone='home';G.px=8*T+8;G.py=3*T+8;G.dir=2;ENTS=[];SURF=genSurface();PR=[];G.talked={};G.gifted={};
  for(const id in npcRT)delete npcRT[id];placeNPCs(true);save(true);
  const pg=[(passed?'You collapsed from exhaustion and a drone carried you home. ':'')+'Sol '+G.day+' - '+season()+' season, Year '+year()+'.','Shipping earned '+earn+'cr. '+(grew?grew+' crops grew. ':'')+(r?'R0-V3R watered '+r+'. ':'')+(sp?'Sprinklers watered '+sp+'. ':'')];
  if(wilted||died)pg.push((wilted?wilted+' crops are wilting - water them! ':'')+(died?died+' crops withered away.':''));
  if(ns!=oldS)pg.push('A new season begins: '+season()+'!'+(killed?' '+killed+' out-of-season crops died.':'')+' New seeds are at Supply & Tech.');
- if(prod)pg.push(prod);if(kidMsg)pg.push(kidMsg);if(G.terra<3&&G.day>=2&&G.day%3==0)pg.push('MAYOR VEGA (radio): The terraforming project needs you. Next stage: '+TERRA[G.terra].n+'. Check the Community Center.');checkAch();if(bdn.length)pg.push('Today is '+bdn.map(q=>q.n).join(' & ')+'\'s birthday! A gift today means triple friendship.');pg.push('New request on the city board: '+reqText());if(spouseMsg)pg.push(spouseMsg);if(isFestival())pg.push("Today is the Founders' Festival! Join everyone in the New Cydonia plaza from 9:00 to 16:00.");G.feast=0;say('Good morning',pg)}
+ if(prod)pg.push(prod);if(kidMsg)pg.push(kidMsg);if(G.terra<3&&G.day>=2&&G.day%3==0)pg.push('MAYOR VEGA (radio): The terraforming project needs you. Next stage: '+TERRA[G.terra].n+'. Check the Community Center.');checkAch();if(bdn.length)pg.push('Today is '+bdn.map(q=>q.n).join(' & ')+'\'s birthday! A gift today means triple friendship.');pg.push('New request on the city board: '+reqText());if(spouseMsg)pg.push(spouseMsg);if(isFestival())pg.push('Today is the '+festName()+"! Join everyone in the New Cydonia plaza from 9:00 to 16:00.");G.feast=0;say('Good morning',pg)}
 
 // ---------- animals ----------
 const ANAMES=['Dusty','Rusty','Phoebe','Deimos','Nugget','Olympus','Clucky','Valles','Crater','Pebble'];
@@ -212,6 +212,6 @@ function checkAch(){for(const[id,n,,f]of ACH)if(!G.ach[id]&&f(G)){G.ach[id]=G.da
 // ---------- terraforming ----------
 function terraMenu(){if(G.terra>=3){say('Terraforming','All three stages are complete. Mars is waking up.',[{t:'Roll the credits',f:()=>rollCredits('game')},{t:'Back',f:bundleMenu}]);return}
  const s=TERRA[G.terra];say('Terraforming - Stage '+(G.terra+1)+'/3',[s.n+': '+s.d,'Needs '+s.cr+'cr + '+Object.entries(s.in).map(([k,q])=>cnt(k)+'/'+q+' '+ITEMS[k].n).join(', ')+'.'],
-  [{t:'Build '+s.n,f:()=>{if(G.money>=s.cr&&hasAll(s.in)){G.money-=s.cr;for(const[k,q]of Object.entries(s.in))rem(k,q);G.terra++;sfx('wed');for(const n of NPCS)addHearts(n,.5);checkAch();
+  [{t:'Build '+s.n,f:()=>{if(G.money>=s.cr&&hasAll(s.in)){G.money-=s.cr;for(const[k,q]of Object.entries(s.in))rem(k,q);G.terra++;if(G.terra>=3)SURF=null;sfx('wed');for(const n of NPCS)addHearts(n,.5);checkAch();
     const msg=['Lichen spores drift over the plains. Within days, the red dust is streaked with green.','The processor roars to life. The sky over the surface turns a pale, impossible blue.','The ice melts. For the first time in three billion years, water fills the craters of Mars.'][G.terra-1];
     say('Stage '+G.terra+' complete!',[msg,'The whole colony cheers. Everyone\'s friendship +0.5 hearts.'],G.terra==3?[{t:'Roll the credits',f:()=>rollCredits('game')},{t:'Later'}]:null)}else{toast('Need more credits/materials');sfx('bad');terraMenu()}}},{t:'Back',f:bundleMenu}])}
