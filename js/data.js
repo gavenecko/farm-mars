@@ -104,3 +104,17 @@ const ANIMALS={hen:{n:'Mars Hen',p:400,prod:'egg',every:1},goat:{n:'Red Goat',p:
 const RESEARCH=['iron','crys','cob','pla','frz','core','glowcap','lily','vmoss','chit','venom','carp','eel','koi','egg','milk'];
 const BUNDLES=[{n:'Farm Bundle',in:{pot:5,let:5,wht:5},r:600},{n:'Mineral Bundle',in:{iron:10,crys:3,cob:2},r:900},{n:'Surface Bundle',in:{glowcap:3,lily:3,chit:5},r:700},{n:'Deep Bundle',in:{pla:1,vmoss:2,core:1},r:3000}];
 const BUGS={crawler:{hp:3,spd:.6,dmg:8,c:'#7a3ccf',c2:'#b88cff',drop:'chit'},spitter:{hp:4,spd:.45,dmg:6,c:'#3a9a2a',c2:'#9f6',drop:'venom'},hopper:{hp:5,spd:.5,dmg:12,c:'#cf6a2a',c2:'#ffb070',drop:'chit'},frostmite:{hp:9,spd:.75,dmg:14,c:'#5ab0e0',c2:'#e0f8ff',drop:'frz'},queen:{hp:70,spd:.5,dmg:15,c:'#4ad8ff',c2:'#e0ffff',drop:'core',boss:1}};
+
+const SKILLS={farm:'Farming',mine:'Mining',combat:'Combat',forage:'Foraging',fish:'Fishing'};
+const PERKS={farm:['+20% chance of a bonus crop','+40% bonus crop chance'],mine:['+1 pickaxe power','+1 ore per rock'],combat:['+2 weapon damage','Take 25% less damage'],forage:['30% chance to double forage','Surface O2 lasts 30% longer'],fish:['30% wider catch zone','Rare Koi bite twice as often']};
+const TERRA=[{n:'Lichen Seeding',d:'Seed the plains with hardy lichen. The surface starts turning green.',in:{glowcap:8,lily:4},cr:1500},
+ {n:'Atmosphere Processor',d:'Thicken the air. Surface oxygen lasts 50% longer and the sky turns blue.',in:{iron:25,crys:8,cob:4},cr:4000},
+ {n:'Polar Ice Melter',d:'Melt buried ice. Craters fill with liquid water. The colony\'s dream comes true.',in:{frz:5,cob:8,pla:2},cr:9000}];
+const ACH=[['harvest1','First Harvest','Harvest a crop',g=>g.stats.harvest>=1],['harvest100','Breadbasket','Harvest 100 crops',g=>g.stats.harvest>=100],
+ ['mine50','Rock Breaker','Break 50 rocks',g=>g.stats.mined>=50],['bugs50','Exterminator','Defeat 50 bugs',g=>g.stats.bugs>=50],
+ ['queen','Queenslayer','Defeat the Crystal Queen',g=>g.bossDead],['deep20','Rock Bottom','Reach mine floor 20',g=>g.deep>=20],
+ ['fish10','Angler','Catch 10 fish',g=>(g.stats.fish||0)>=10],['animals4','Rancher','Own 4 animals',g=>g.animals.length>=4],
+ ['req5','Good Neighbor','Finish 5 board requests',g=>(g.stats.reqs||0)>=5],['research','Archivist','Complete the Research Archive',g=>Object.keys(g.research).length>=RESEARCH.length],
+ ['married','Red Pendant','Get married',g=>!!g.spouse],['terra3','Terraformer','Finish all terraforming stages',g=>g.terra>=3],
+ ['rich','Credit Baron','Hold 20,000cr',g=>g.money>=20000],['skill10','Master','Reach level 10 in any skill',g=>Object.values(g.xp).some(x=>x>=2000)]];
+ITEMS.rover={n:'Surface Rover Key',v:0,c:'#fd4',p:3000,d:'Your rover drives twice as fast on the surface.'};

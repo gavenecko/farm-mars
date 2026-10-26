@@ -13,7 +13,7 @@ const SFX={till:()=>{noise(.12,.3,400);tone(110,.1,'square',.1,-40)},water:()=>{
 function sfx(n){if(AU.sfx&&AU.ctx&&SFX[n])try{SFX[n]()}catch(e){}}
 // music: per-zone procedural loops
 const SONGS={farm:{bpm:84,root:57,scale:[0,2,4,7,9],wave:'triangle',pad:1},city:{bpm:104,root:55,scale:[0,3,5,7,10],wave:'square',pad:0},
- surf:{bpm:66,root:50,scale:[0,1,5,7,8],wave:'sine',pad:1},mine:{bpm:60,root:45,scale:[0,1,3,6,7],wave:'sine',pad:1},indoor:{bpm:76,root:60,scale:[0,4,7,9,11],wave:'triangle',pad:0},boss:{bpm:140,root:45,scale:[0,1,3,6,7],wave:'sawtooth',pad:0}};
+ surf:{bpm:66,root:50,scale:[0,1,5,7,8],wave:'sine',pad:1},mine:{bpm:60,root:45,scale:[0,1,3,6,7],wave:'sine',pad:1},indoor:{bpm:76,root:60,scale:[0,4,7,9,11],wave:'triangle',pad:0},credits:{bpm:72,root:53,scale:[0,2,4,7,9],wave:'triangle',pad:1},boss:{bpm:140,root:45,scale:[0,1,3,6,7],wave:'sawtooth',pad:0}};
 let musRnd=1;const mr=()=>(musRnd=(musRnd*16807)%2147483647)/2147483647;
 function auSched(){const a=AU.ctx;if(!a||!AU.music||!AU.zone)return;const s=SONGS[AU.zone];const spb=60/s.bpm/2;
  if(AU.next<a.currentTime)AU.next=a.currentTime+.05;

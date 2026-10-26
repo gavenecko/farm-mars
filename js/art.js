@@ -59,7 +59,13 @@ function drawChar(g,X,Y,look,dir,frame,o={}){// X,Y = top-left of 16x24 box; fee
   if(st=='beard'){px(g,X+4,hy+6,8,4,hr);px(g,X+3,hy,10,1,shade(sk,.2))}}
  if(o.suit){g.strokeStyle='#bff9';g.lineWidth=1;g.beginPath();g.arc(X+8,hy+4,7.5,0,6.3);g.stroke();px(g,X+5,hy-2,3,1,'#fff8')}
  if(o.carry){const c=o.carry;ob(g,X+5,Y-6+bob,6,6,c);px(g,X+6,Y-5+bob,2,2,'#fff8')}}
-function drawPortrait(g,X,Y,look,s=3){const c=document.createElement('canvas');c.width=16;c.height=14;const q=c.getContext('2d');drawChar(q,0,0,look,2,0);g.imageSmoothingEnabled=false;g.drawImage(c,0,0,16,14,X,Y,16*s,14*s)}
+const PC={};function drawPortrait(g,X,Y,look,s=3,mood='',blink=false){const key=JSON.stringify(look)+mood+blink;let c=PC[key];if(!c){c=PC[key]=document.createElement('canvas');c.width=16;c.height=14;const q=c.getContext('2d');drawChar(q,0,0,look,2,0);const sk=look.skin,dk=shade(sk,-.45),hy=2;
+ if(blink){px(q,5,hy+4,2,2,sk);px(q,9,hy+4,2,2,sk);px(q,5,hy+5,2,1,'#223');px(q,9,hy+5,2,1,'#223')}
+ if(mood=='happy'||mood=='love'){px(q,7,hy+7,2,1,sk);px(q,6,hy+7,4,1,dk);px(q,6,hy+6,1,1,dk);px(q,9,hy+6,1,1,dk)}
+ if(mood=='love'){px(q,4,hy+6,2,1,'#f6a');px(q,10,hy+6,2,1,'#f6a');if(!blink){px(q,5,hy+4,2,2,sk);px(q,9,hy+4,2,2,sk);px(q,5,hy+5,1,1,'#223');px(q,6,hy+4,1,1,'#223');px(q,9,hy+4,1,1,'#223');px(q,10,hy+5,1,1,'#223')}}
+ if(mood=='angry'){px(q,5,hy+3,2,1,'#223');px(q,9,hy+3,2,1,'#223');px(q,7,hy+7,2,1,sk);px(q,6,hy+8,4,1,dk);px(q,6,hy+7,1,1,dk);px(q,9,hy+7,1,1,dk)}
+ if(mood=='sad'){px(q,7,hy+7,2,1,sk);px(q,6,hy+8,4,1,dk);px(q,11,hy+5,1,2,'#8cf')}}
+ g.imageSmoothingEnabled=false;g.drawImage(c,0,0,16,14,X,Y,16*s,14*s)}
 // ---------- robot ----------
 function drawRobot(g,X,Y,t){const b=Math.sin(t/8)*1;px(g,X+3,Y+14,10,3,'#0005');ob(g,X+3,Y+3+b,10,9,'#c8ccd8');px(g,X+3,Y+3+b,10,2,'#eef');ob(g,X+5,Y+5+b,6,3,'#123');px(g,X+6,Y+6+b,1,1,t%40<20?'#0ff':'#088');px(g,X+9,Y+6+b,1,1,'#0ff');
  px(g,X+7,Y-1+b,2,4,'#99a');px(g,X+7,Y-2+b,2,1,t%30<15?'#f40':'#a20');ob(g,X+4,Y+12,3,2,'#556');ob(g,X+9,Y+12,3,2,'#556')}
