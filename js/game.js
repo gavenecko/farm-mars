@@ -167,7 +167,7 @@ function sleep(passed){sfx('sleep');let earn=0;for(const[i,q]of G.ship)earn+=ITE
  for(const k in G.tiles){const t=G.tiles[k];if(t.c){if(t.w){t.g++;t.dry=0;grew++}else{t.dry++;if(t.dry>=3){t.c=null;t.g=0;died++}else if(t.dry==2)wilted++}}t.w=0}
  G.day++;const ns=seasonIdx();let killed=0;if(ns!=oldS)for(const k in G.tiles){const t=G.tiles[k];if(t.c&&!CROPS[t.c].s.includes(ns)){t.c=null;killed++}}
  // morning: sprinklers, robot, spouse
- let sp=0;for(const k in G.objs){const[x,y]=k.split(',').map(Number),q=G.objs[k]=='qspr';for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){if(!a&&!b||(!q&&a&&b))continue;const t=G.tiles[(x+a)+','+(y+b)];if(t){t.w=1;t.dry=0;sp++}}}
+ let sp=0;for(const k in G.objs){if(!/spr$/.test(G.objs[k]))continue;const[x,y]=k.split(',').map(Number),q=G.objs[k]=='qspr';for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){if(!a&&!b||(!q&&a&&b))continue;const t=G.tiles[(x+a)+','+(y+b)];if(t){t.w=1;t.dry=0;sp++}}}
  let r=0;for(const k in G.tiles){const t=G.tiles[k];if(t.c&&!t.w&&r<3){t.w=1;t.dry=0;r++}}
  const prod=animalsMorning();let kidMsg='';if(G.spouse&&!G.kids&&G.day-G.wedDay>=7&&G.hearts[G.spouse]>=10){G.kids=1;G.kidDay=G.day;kidMsg='Big news! You and '+NPCS.find(q=>q.id==G.spouse).n+' welcomed a baby into your habitat. Welcome to the colony, little one!'}
  genReq(true);const bdn=NPCS.filter(q=>isBday(q,G.day));
