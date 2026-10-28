@@ -41,7 +41,7 @@ function openMenu(t){menu={tab:t,pick:null,confirm:0};joy={on:false}}function cl
 function menuTab(d){menu.tab=TABS[(TABS.indexOf(menu.tab)+d+TABS.length)%TABS.length];sfx('menu')}
 function menuTap(x,y){if(x>W-40&&y<34){closeMenu();return}if(y>14&&y<32){const i=Math.floor((x-20)/62);if(i>=0&&i<TABS.length){menu.tab=TABS[i];menu.pick=null;sfx('menu')}return}
  if(menu.tab=='bag'){const i=slotAt(x,y);if(i<0)return;if(menu.pick==null){menu.pick=i;if(i<10)G.sel=i}else{const a=G.inv[menu.pick];G.inv[menu.pick]=G.inv[i];G.inv[i]=a;menu.pick=null}sfx('menu')}
- if(menu.tab=='craft'){const i=Math.floor((y-40)/18);const rs=RECIPES;if(i>=0&&i<rs.length)craft(rs[i])}
+ if(menu.tab=='craft'){const i=Math.floor((y-40)/18),P=craftPage();if(P.n>1&&i==7){CRPG=(CRPG+1)%P.n;sfx('menu')}else if(i>=0&&i<P.rs.length)craft(P.rs[i])}
  if(menu.tab=='system'){const i=Math.floor((y-36)/18);if(i==0){G.music=AU.music=!G.music}if(i==1){G.sfx=AU.sfx=!G.sfx}if(i==2)save();if(i==5)toggleFS();if(i==6){save(true);menu=null;TITLE=true;return}if(i==7){menu=null;rollCredits('game');return}if(i==4){if(unstick(true)){toast('Moved to a safe spot');menu=null}}if(i==3){if(menu.confirm){localStorage.removeItem(slotKey(SLOT));if(SLOT==1)localStorage.removeItem('farmmars1');G=newGame();boot();menu=null;toast('New game started')}else{menu.confirm=1;toast('Tap again to confirm NEW GAME')}}sfx('menu')}}
 function slotAt(x,y){const sx=(W-10*24)/2,sy=44;const c=Math.floor((x-sx)/24),r=Math.floor((y-sy)/24);return c>=0&&c<10&&r>=0&&r<3?r*10+c:-1}
 // ---------- update ----------
@@ -95,7 +95,7 @@ function shoot(e,a,s,d){PR.push({x:e.x,y:e.y-6,vx:Math.cos(a)*s,vy:Math.sin(a)*s
 let LIGHTS=[];const light=(x,y,r,c)=>LIGHTS.push({x,y,r,c});
 function zoneKey(){return G.zone}
 function draw(){if(CRED){drawCredits();return}if(TITLE){drawTitle();return}const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=[];
- CAMX=0;let ox=Math.round(Math.max(0,Math.min(mw-W,G.px-W/2))),oy=Math.round(Math.max(0,Math.min(mh-H,G.py-H/2-10)));if(mw<W)ox=Math.round(-(W-mw)/2);if(mh<H)oy=Math.round(-(H-mh)/2);
+ CAMX=0;const tox=Math.max(0,Math.min(mw-W,G.px-W/2)),toy=Math.max(0,Math.min(mh-H,G.py-H/2-10));if(CAM.z!==G.zone||FADE>0||Math.abs(CAM.x-tox)>90||Math.abs(CAM.y-toy)>90){CAM.x=tox;CAM.y=toy}else{CAM.x+=(tox-CAM.x)*.2;CAM.y+=(toy-CAM.y)*.2}CAM.z=G.zone;let ox=Math.round(CAM.x),oy=Math.round(CAM.y);if(mw<W)ox=Math.round(-(W-mw)/2);if(mh<H)oy=Math.round(-(H-mh)/2);
  cx.fillStyle={farm:'#2a1208',city:'#0a0614',surf:'#12040c',mine:'#08060c'}[z]||'#0a0608';cx.fillRect(0,0,W,H);
  if(EXITS[z]){cx.fillStyle='#000';cx.fillRect(0,0,W,H)}
  const x0=Math.max(0,Math.floor(ox/T)),y0=Math.max(0,Math.floor(oy/T)),x1=Math.min(m[0].length,Math.ceil((ox+W)/T)+1),y1=Math.min(m.length,Math.ceil((oy+H)/T)+2);
@@ -216,7 +216,7 @@ function hud(){const z=G.zone;panel(3,3,124,OUTZ(z)?47:38,'#0a0612d8','#ffb050')
  const h=Math.floor(G.time/60)%24,mm=G.time%60,ic=G.time<1140?'☀':'☾';txt(`${season()} ${solOfSeason()} · Y${year()}`,7,12,'#ffd27a',8);txt(ic+' '+String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'),123,12,'#fff',8,'right');
  bar(7,16,G.energy,G.maxEn,'#fc3','EN');bar(7,25,G.hp,100,'#f44','HP');txt(G.money+'cr',123,32,'#7f7',8,'right');
  if(OUTZ(z)){bar(7,34,G.o2,100,G.o2<25&&tick%20<10?'#f00':'#3cf','O2');if(G.o2<25)txt('LOW OXYGEN!',W/2,46,'#f44',9,'center')}
- const zn={farm:'Dome Farm',mine2:0,city:'New Cydonia',surf:'Martian Surface',home:'Your Habitat',cafe:'Red Dust Cafe',shop:'Supply & Tech',cc:'Community Center',valles:'Valles Canyon',mine:(G.floor>10?'Frozen Depths - ':'Mine - Floor ')+(G.floor>10?'F'+G.floor:G.floor)}[z];txt(zn,W/2,12,'#fff9',8,'center');
+ const zn={farm:'Dome Farm',mine2:0,city:'New Cydonia',surf:'Martian Surface',home:'Your Habitat',cafe:'Red Dust Cafe',shop:'Supply & Tech',cc:'Community Center',valles:'Valles Canyon',clinic:'Cydonia Clinic',bar:'The Airlock',port:'Shuttle Port',phobos:'Phobos Station',mine:MINE&&MINE.rift?'Hellas Rift - Depth '+G.rfloor:(G.floor>10?'Frozen Depths - ':'Mine - Floor ')+(G.floor>10?'F'+G.floor:G.floor)}[z];txt(zn,W/2,12,'#fff9',8,'center');
  const boss=ENTS.find(e=>e.t=='queen'||e.t=='wyrm'&&e.awake);if(boss){R(W/2-80,18,160,8,'#000');R(W/2-79,19,158*boss.hp/boss.max,6,'#4df');txt(boss.t=='wyrm'?'SAND WYRM':'CRYSTAL QUEEN',W/2,32,'#bff',7,'center')}
  R(W-46,3,43,19,'#ff6aa8');R(W-45,4,41,17,'#1a0a24');txt('MENU',W-24.5,16,'#fff',8,'center');R(W-67,3,19,19,'#ffb050');R(W-66,4,17,17,'#1a0a24');{const c='#fff',a=W-63,b=7,o=isFS()?3:0;R(a+o,b+o,4,1,c);R(a+o,b+o,1,4,c);R(a+11-o,b+o,4,1,c);R(a+14-o,b+o,1,4,c);R(a+o,b+10+o-o*2,1,4,c);R(a+o,b+13-o,4,1,c);R(a+14-o,b+10-o,1,4,c);R(a+11-o,b+13-o,4,1,c)}
  for(let i=0;i<10;i++){const X=HB.x+i*HB.s,Y=HB.y;R(X,Y,HB.s-1,HB.s-1,i==G.sel?'#ffd27a':'#000c');R(X+1,Y+1,HB.s-3,HB.s-3,i==G.sel?'#4a2a3a':'#2a1a2acc');const s=G.inv[i];if(s){drawIcon(cx,s[0],X+2,Y+2);const it=ITEMS[s[0]];if(it.tool&&G.tools[s[0]]>1)R(X+2,Y+2,3,3,['','','#c96','#46f'][G.tools[s[0]]]);if(!it.tool)txt(s[1],X+HB.s-2,Y+HB.s-2,'#fff',7,'right')}}
@@ -238,8 +238,8 @@ function drawMenu(){panel(12,8,W-24,H-16,'#120818f4','#ffb050');TABS.forEach((t,
   txt('Top row = hotbar. Tap an item, then tap another slot to move/swap.',W/2,124,'#aaa',7,'center');const s=G.inv[menu.pick!=null?menu.pick:G.sel];
   if(s){const it=ITEMS[s[0]];txt(it.n+(G.tools[s[0]]?' - '+TOOL_TIER_NAMES[G.tools[s[0]]]+' tier':''),24,140,'#ffd27a',8);wrapLines(it.d||(it.tool?'A trusty tool. Upgrade at Supply & Tech.':''),W-60,7).forEach((l,i)=>txt(l,24,151+i*9,'#ddd',7));if(it.v)txt('Sells for '+it.v+'cr'+(it.food?'  ·  +'+it.food+' energy':''),24,172,'#7f7',7)}
   txt(`Harvested ${G.stats.harvest} · Mined ${G.stats.mined} · Bugs ${G.stats.bugs} · Deepest floor ${G.deep}`,W/2,H-20,'#9ab',7,'center')}
- if(menu.tab=='craft'){RECIPES.forEach((r,i)=>{const Y=40+i*18,ok=hasAll(r.in)&&(!r.cook||G.zone=='home');panel(24,Y,W-48,16,ok?'#1a3a2a':'#1a0e24',ok?'#6c6':'#5a4a5a');drawIcon(cx,r.id,27,Y);
-  txt(ITEMS[r.id].n+(r.cook?' (kitchen)':''),46,Y+11,ok?'#bfb':'#bbb',8);txt(Object.entries(r.in).map(([k,q])=>cnt(k)+'/'+q+' '+ITEMS[k].n).join('  '),W-28,Y+11,'#ddd',7,'right')});txt('Tap a recipe to craft. Cooking works at your home kitchen.',W/2,H-18,'#aaa',7,'center')}
+ if(menu.tab=='craft'){const P=craftPage();if(P.n>1){panel(24,40+7*18,W-48,16,'#1a2a3a','#6cf');txt('More recipes  ('+(P.pg+1)+'/'+P.n+')  ▶',W/2,40+7*18+11,'#cef',8,'center')}P.rs.forEach((r,i)=>{const Y=40+i*18,ok=hasAll(r.in)&&(!r.cook||G.zone=='home');panel(24,Y,W-48,16,ok?'#1a3a2a':'#1a0e24',ok?'#6c6':'#5a4a5a');drawIcon(cx,r.id,27,Y);
+  txt(ITEMS[r.id].n+(r.cook?' (kitchen)':''),46,Y+11,ok?'#bfb':'#bbb',8);txt(Object.entries(r.in).map(([k,q])=>cnt(k)+'/'+q+' '+ITEMS[k].n).join('  '),W-28,Y+11,'#ddd',7,'right')});txt('Tap a recipe to craft. Meals: use the Recipe Book at your home kitchen.',W/2,H-18,'#aaa',7,'center')}
  if(menu.tab=='social'){NPCS.forEach((n,i)=>{const X=18+(i%2)*174,Y=36+Math.floor(i/2)*41,w=170;panel(X,Y,w,39,'#1a0e24',isBday(n)?'#ffd27a':'#6a4a6a');drawPortrait(cx,X+2,Y+3,n.look,2);const h=G.hearts[n.id]||0;txt(n.n,X+36,Y+10,'#ffd27a',8);
   for(let j=0;j<10;j++)txt(j<Math.floor(h)?'♥':j<h?'♡':'·',X+36+j*8,Y+21,j<h?'#f6a':'#666',8);
   const st=G.spouse==n.id?'Spouse ♥':G.dating[n.id]?'Dating':n.mar?'Single':'';txt(st,X+w-4,Y+10,'#f8c',7,'right');const b=BDAY[n.id];
@@ -324,3 +324,6 @@ function drawSkills(){let y=40;txt('SKILLS',24,y,'#ffd27a',8);for(const k in SKI
   cx.save();cx.beginPath();cx.rect(24,y+8,168,10);cx.clip();txt(perk(k)?'Perk: '+PERKS[k][perk(k)-1]:'Lv5 perk: '+PERKS[k][0],24,y+15,perk(k)?'#ffd27a':'#888',6);cx.restore()}
  const X=200;txt('MAIN QUEST: TERRAFORM MARS',X,40,'#ffd27a',7);txt(G.terra>=3?'Complete! Mars is waking up.':'Stage '+(G.terra+1)+'/3: '+TERRA[G.terra].n,X,50,'#8ef',7);for(let i=0;i<3;i++)R(X+i*50,54,46,4,i<G.terra?'#6c6':'#333');
  const got=Object.keys(G.ach).length;txt('ACHIEVEMENTS '+got+'/'+ACH.length,X,72,'#ffd27a',7);ACH.forEach(([id,n,d],i)=>txt((G.ach[id]?'✓ ':'· ')+n+(G.ach[id]?'':' - '+d),X,82+i*8.5,G.ach[id]?'#9f9':'#888',6))}
+
+let CRPG=0;function craftPage(){const all=RECIPES.filter(r=>!r.cook),n=Math.ceil(all.length/7)||1,pg=CRPG%n;return{rs:all.slice(pg*7,pg*7+7),n,pg}}
+const CAM={x:0,y:0,z:null};
