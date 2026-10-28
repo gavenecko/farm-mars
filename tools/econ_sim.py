@@ -3,13 +3,11 @@
 # plus optional mine trips. Usage: python3 econ_sim.py [start_money] [water_cost]
 import sys
 CROPS={'pot':(20,3,45),'let':(15,2,30),'wht':(10,3,25)}
-def run(grant=0,let_p=15,start=400,sols=7,en=100,water=1.0,till=2,seeds={'pot':6,'let':6,'wht':4},mine=0,label=''):
-    CROPS['let']=(let_p,2,30)
+def run(start=400,sols=7,en=100,water=1.0,till=2,seeds={'pot':6,'let':6,'wht':4},mine=0,label=''):
     money=start;tiles=[];tilled=0;log=[]
     inv=dict(seeds)
     for d in range(1,sols+1):
         e=en
-        if d==2: money+=grant
         # water existing
         e-=water*len(tiles)
         # harvest ready -> ship
@@ -45,5 +43,5 @@ def run(grant=0,let_p=15,start=400,sols=7,en=100,water=1.0,till=2,seeds={'pot':6
         money+=earn  # shipped overnight
     return money,log
 if __name__=='__main__':
-    for lab,kw in [('current (400cr start)',{}),('round 11 (500cr, 8 pot/10 let seeds, lettuce 12cr, 150cr grant on sol 2)',{'start':500,'seeds':{'pot':8,'let':10,'wht':4},'grant':150,'let_p':12})]:
+    for lab,kw in [('current (400cr start)',{}),('tuned (500cr, +lettuce seeds)',{'start':500,'seeds':{'pot':8,'let':10,'wht':4}})]:
         m,log=run(**kw);print('==',lab);[print(' sol %d: cash %5d tiles %3d energyLeft %3d shippedOvernight %4d'%r) for r in log];print(' end-of-season credits',m)

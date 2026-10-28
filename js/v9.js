@@ -38,12 +38,12 @@ function readLetter(id){const L=LETTERS.find(l=>l[0]==id);G.mail.read[id]=1;cons
 function mailMenu(){mailCheck();const b=G.mail.box.slice().reverse();if(!b.length){say('Mailbox','Empty. Check back tomorrow.');return}
  const o=b.slice(0,6).map(id=>{const L=LETTERS.find(l=>l[0]==id);return{t:(G.mail.read[id]?'  ':'✉ ')+L[1]+': '+L[2],f:()=>readLetter(id)}});o.push({t:'Close'});say('Mailbox',unread()+' unread letter(s).',o);sfx('menu')}
 // ---------- hints ----------
-const HINTS=[['eat',g=>g.energy<25,'Low energy: hold food + ACT to eat, or sleep.'],['mail',g=>unread()>0&&g.zone=='farm','You have mail! Mailbox is by your habitat.'],
- ['late',g=>g.time>=1380,'Late! Sleep before 02:00 or you pass out.'],['ship',g=>g.inv.some(s=>s&&ITEMS[s[0]].crop),'Ship crops in the bin by your door.'],
- ['o2',g=>OUTZ(g.zone)&&g.o2<35,'O2 low! Find an airlock or use an O2 Canister.'],['key',g=>cnt('riftkey')>0,'Rift Key: the gate is south of the mine.'],
- ['lic',g=>g.money>=2600&&!g.port,'You can afford a Shuttle License (south city).'],['bar',g=>g.zone=='city'&&g.time>=1020&&g.day<=10,'The Airlock bar is open (south city).'],
- ['roll',g=>OUTZ(g.zone)&&ENTS.some(e=>e.k=='bug'&&Math.hypot(e.x-g.px,e.y-g.py)<60),'SHIFT/ROLL to dodge. Hold ACT to spin-attack.'],
- ['ring',g=>g.inv.some(s=>s&&ITEMS[s[0]].ring),'Hold a ring and press ACT to equip it.'],['pod',g=>g.pod&&g.zone=='biopod','Fill troughs daily. Incubator: 3 gel + 1 crys.']];
+const HINTS=[['eat',g=>g.energy<25,'Low energy - hold food and press ACT to eat, or sleep in your bed.'],['mail',g=>unread()>0&&g.zone=='farm','You have mail! The mailbox is next to your habitat.'],
+ ['late',g=>g.time>=1380,'It is getting late - sleep before 02:00 or you will pass out.'],['ship',g=>g.inv.some(s=>s&&ITEMS[s[0]].crop),'Ship crops in the bin by your door, or sell at the city shop.'],
+ ['o2',g=>OUTZ(g.zone)&&g.o2<35,'Oxygen low! Head back through an airlock or use an O2 Canister.'],['key',g=>cnt('riftkey')>0,'You have a Rift Key - the gate is south of the mine entrance.'],
+ ['lic',g=>g.money>=2600&&!g.port,'You can afford a Shuttle License at the port in the south district.'],['bar',g=>g.zone=='city'&&g.time>=1020&&g.day<=10,'The Airlock bar is open in the south district.'],
+ ['roll',g=>OUTZ(g.zone)&&ENTS.some(e=>e.k=='bug'&&Math.hypot(e.x-g.px,e.y-g.py)<60),'Dodge with SHIFT (or ROLL). Hold ACT with a weapon for a spin attack.'],
+ ['ring',g=>g.inv.some(s=>s&&ITEMS[s[0]].ring),'Hold a ring and press ACT to equip it.'],['pod',g=>g.pod&&g.zone=='biopod','Fill the troughs (top right) daily. Put 3 gel + 1 crystal in the incubator for a new blob.']];
 function hintTick(){if(toastT||modal||menu||CUT||!G.hints)return;for(const[id,c,t]of HINTS)if(!G.hints[id]&&c(G)){G.hints[id]=1;toast('Tip: '+t);return}}
 // ---------- farm layouts ----------
 const FARM0=MAPS.farm.map(r=>r.slice());const LAYOUTS={std:'Standard',ridge:'Crater Ridge',ice:'Ice Field'};
@@ -108,11 +108,11 @@ const CDN=['vega','kai','ruiz','mo','zara','theo','pip','ava'];
 }}
 function colonyDay(){const y=year();G.colony=G.colony||{};if(G.colony[y])return false;G.colony[y]=1;const m=modal;playCut('colony',COLONY,()=>{add('medal');G.money+=500;G.stats.colony=(G.stats.colony||0)+1;checkAch();modal=m;toast('Colony Medal + 500cr')});setMusic('credits');return true}
 const FW=[];{const _dc=drawCut;drawCut=function(){const c=CUT;if(c.k!='colony')return _dc();const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#05021a');g.addColorStop(1,'#2a0a2a');cx.fillStyle=g;cx.fillRect(0,0,W,H);stars(70,.02,1,3);
- if(tick%10==0&&FW.length<14){const x=40+Math.random()*(W-80),y=30+Math.random()*(H*.35);FW.push({x,y,t:0,c:rnd(['#ff4a6a','#ffd23a','#5adf8a','#6ab8ff','#ff8ad8','#fff']),n:18+Math.floor(Math.random()*10)});sfx('shoot')}
- for(const f of FW){f.t++;const r=f.t*1.3,a=Math.max(0,1-f.t/50);cx.globalAlpha=a;for(let i=0;i<f.n;i++){const an=i/f.n*6.28;R(f.x+Math.cos(an)*r,f.y+Math.sin(an)*r+f.t*f.t*.01,3,3,f.c);R(f.x+Math.cos(an)*r*.6,f.y+Math.sin(an)*r*.6,1,1,'#fff')}cx.globalAlpha=1;light(f.x,f.y,40*a,f.c)}for(let i=FW.length-1;i>=0;i--)if(FW[i].t>50)FW.splice(i,1);
+ if(tick%22==0&&FW.length<12){const x=40+Math.random()*(W-80),y=30+Math.random()*(H*.35);FW.push({x,y,t:0,c:rnd(['#ff4a6a','#ffd23a','#5adf8a','#6ab8ff','#ff8ad8','#fff']),n:18+Math.floor(Math.random()*10)});sfx('shoot')}
+ for(const f of FW){f.t++;const r=f.t*1.3,a=Math.max(0,1-f.t/50);cx.globalAlpha=a;for(let i=0;i<f.n;i++){const an=i/f.n*6.28;R(f.x+Math.cos(an)*r,f.y+Math.sin(an)*r+f.t*f.t*.01,2,2,f.c)}cx.globalAlpha=1;light(f.x,f.y,40*a,f.c)}for(let i=FW.length-1;i>=0;i--)if(FW[i].t>50)FW.splice(i,1);
  for(let i=0;i<7;i++){const x=i*W/6-20,r=34+hash(i,5)%26;cx.fillStyle='#120a20';cx.beginPath();cx.arc(x,H-56,r,Math.PI,0);cx.fill();cx.strokeStyle='#ff6aa855';cx.stroke()}R(0,H-56,W,56,'#1a0e1e');R(0,H-56,W,1,'#ff6aa8');
  const sp=c.i>=1&&c.i<=8?CDN[c.i-1]:null;CDN.forEach((id,i)=>{const n=NPCS.find(n=>n.id==id);if(!n)return;const X=W/2-150+i*34+(i>=4?40:0),Y=H-80-(sp==id?3+Math.abs(Math.sin(tick/6))*3:0);drawChar(cx,X,Y,n.look,2,0)});
- if(G.look)drawChar(cx,W/2-150+4*34+3,H-80,G.look,2,0);
+ if(G.look)drawChar(cx,W/2-16+52,H-80,G.look,2,0);
  c.t++;c.ch+=TSPD[SET.text][0]*.8;const L=c.lines[c.i]||'';panel(14,H-44,W-28,38,'#000a','#ffd27a');wrapLines(L.slice(0,Math.floor(c.ch)),W-48,8).slice(0,3).forEach((l,i)=>txt(l,24,H-30+i*10,'#fff'));
  panel(W-50,6,44,16,'#0008','#fff6');txt('SKIP ⏭',W-28,17,'#fff',7,'center');txt('COLONY DAY',W/2,16,'#ffd27a',9,'center');if(c.t>320&&c.ch>=L.length)cutNext()}}
 // ---------- seasonal soundtrack ----------
