@@ -77,7 +77,7 @@ function triggers(){const tx=Math.floor(G.px/T),ty=Math.floor((G.py-2)/T),t=tile
  if(t=='u'){enter('surf',50,9,2)}
  if(t=='v'){if(G.floor>=20){G.py+=T;say('Floor 20','The ice gives way to solid basalt. This is the very bottom... for now.')}else{enterMine(G.floor+1);if(G.floor==11)say('Frozen Depths','The air turns bitter cold. Frost coats the walls, and something skitters in the dark. (Floors 11-20: Cryo Shards and Frostmites)')}}}
 function hurt(d,from){if(invT)return;d=Math.round(d*(perk('combat')>=2?.75:1));G.hp-=d;invT=45;sfx('hurt');parts(G.px,G.py-8,'#f44',8);floatTxt(G.px,G.py-20,'-'+d,'#f66');if(from){const a=Math.atan2(G.py-from.y,G.px-from.x);for(let i=0;i<8;i++){const nx=G.px+Math.cos(a)*1.5,ny=G.py+Math.sin(a)*1.5;if(!solidAt(nx,ny)){G.px=nx;G.py=ny}}}
- if(G.hp<=0){const fee=Math.min(500,Math.floor(G.money*.1));G.money-=fee;G.hp=50;G.o2=100;enter('farm',13,2,2);say('Med Drone','You blacked out. A rescue drone dragged you back to the dome. Medical fee: '+fee+'cr.')}}
+ if(G.hp<=0){const fee=Math.min(500,Math.floor(G.money*.1));G.money-=fee;G.hp=50;G.o2=100;enter('farm',13,6,2);say('Med Drone','You blacked out. A rescue drone dragged you back to the dome. Medical fee: '+fee+'cr.')}}
 function hostile(){const storm=season()=='Storm'&&G.zone=='surf';if(tick%Math.round((G.zone=='mine'?90:storm?40:55)*(perk('forage')>=2?1.3:1)*(G.zone=='surf'&&G.terra>=2?1.5:1))==0)G.o2=Math.max(0,G.o2-1);if(G.o2<=0&&tick%30==0){G.hp-=4;sfx('hurt');if(G.hp<=0)hurt(0)}
  const bugs=ENTS.filter(e=>e.k=='bug');
  for(const e of bugs){const b=BUGS[e.t],d=Math.hypot(G.px-e.x,G.py-e.y),a=Math.atan2(G.py-e.y,G.px-e.x);let mx=0,my=0;e.tm++;if(e.hit)e.hit--;
@@ -93,16 +93,19 @@ function hostile(){const storm=season()=='Storm'&&G.zone=='surf';if(tick%Math.ro
 function shoot(e,a,s,d){PR.push({x:e.x,y:e.y-6,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:150,dmg:d,c:BUGS[e.t].c2});if(e.t!='queen')sfx('shoot')}
 // ---------- render ----------
 let LIGHTS=[];const light=(x,y,r,c)=>LIGHTS.push({x,y,r,c});
+// static base-tile layer for big outdoor maps (one blit instead of ~400 per frame)
+const BGK={};function bgCache(z,m){if(z!='valles'&&z!='surf'&&z!='mine')return null;const mw=m[0].length*T,mh=m.length*T;if(mw<W||mh<H)return null;const k=z+(z=='surf'?G.terra:''),sig=z=='mine'?m.map(r=>r.join('')).join(''):'';const o=BGK[k];if(o&&o.m===m&&o.sig===sig)return o.c;
+ const c=document.createElement('canvas');c.width=mw;c.height=mh;const g=c.getContext('2d');for(let y=0;y<m.length;y++)for(let x=0;x<m[0].length;x++)g.drawImage(tileImg(z,m[y][x],hash(x,y)%4),x*T,y*T);BGK[k]={m,c,sig};return c}
 function zoneKey(){return G.zone}
 function draw(){if(CRED){drawCredits();return}if(TITLE){drawTitle();return}const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=[];
  CAMX=0;const tox=Math.max(0,Math.min(mw-W,G.px-W/2)),toy=Math.max(0,Math.min(mh-H,G.py-H/2-10));if(CAM.z!==G.zone||FADE>0||Math.abs(CAM.x-tox)>90||Math.abs(CAM.y-toy)>90){CAM.x=tox;CAM.y=toy}else{CAM.x+=(tox-CAM.x)*.2;CAM.y+=(toy-CAM.y)*.2}CAM.z=G.zone;let ox=Math.round(CAM.x),oy=Math.round(CAM.y);if(mw<W)ox=Math.round(-(W-mw)/2);if(mh<H)oy=Math.round(-(H-mh)/2);
  cx.fillStyle={farm:'#2a1208',city:'#0a0614',surf:'#12040c',mine:'#08060c'}[z]||'#0a0608';cx.fillRect(0,0,W,H);
  if(EXITS[z]){cx.fillStyle='#000';cx.fillRect(0,0,W,H)}
  const x0=Math.max(0,Math.floor(ox/T)),y0=Math.max(0,Math.floor(oy/T)),x1=Math.min(m[0].length,Math.ceil((ox+W)/T)+1),y1=Math.min(m.length,Math.ceil((oy+H)/T)+2);
- const D=[];
+ const D=[],BGC=bgCache(z,m);if(BGC)cx.drawImage(BGC,ox,oy,W,H,0,0,W,H);
  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const t=m[y][x],X=x*T-ox,Y=y*T-oy,v=hash(x,y)%4;let bt=t;
   if(z=='farm'&&'HBTLN'.includes(t))bt='g';if(z=='city'&&'HAFLSQ'.includes(t))bt='p';
-  cx.drawImage(tileImg(z,bt,v),X,Y);
+  if(!BGC)cx.drawImage(tileImg(z,bt,v),X,Y);
   if(OUTZ(z)&&t=='R'){const top=z=='mine'?(G.floor>10?['#6a8ab0','#cfe8ff','#2a3a5a']:['#3a3048','#4a4060','#1e1828']):z=='valles'?['#9a4a26','#c8743e','#4a1a0c']:['#7a2a3e','#a04a5e','#3a0e1c'];D.push([Y+T,()=>{R(X,Y-7,T,T,top[0]);R(X,Y-7,T,2,top[1]);R(X,Y+9,T,7,top[2]);if(v==1)R(X+4,Y-3,3,2,top[2]);R(X+T,Y+2,3,T-2,'#0003')}])}
   if(z=='surf'&&t=='O'){D.push([Y+T,()=>{R(X+4,Y-18,8,32,'#2a1a3a');R(X+5,Y-17,6,30,'#3a2a50');const g=tick%120<60;R(X+7,Y-12,2,2,g?'#6ff':'#288');R(X+7,Y-6,2,2,'#6ff');R(X+7,Y,2,2,g?'#288':'#6ff')}]);light(X+8,Y-6,26,'#4ff')}
   if(t=='P'||(z=='surf'&&t=='c'&&isPool(x,y)))drawWater(z,m,x,y,X,Y,t);else if(z=='farm'&&t=='g'&&!G.tiles[x+','+y]){const hh=hash(x*3,y*7)%23;if(hh<3){R(X+3+hh*3,Y+9,1,3,'#5a8a2a');R(X+4+hh*3,Y+8,1,4,'#7ab03a');R(X+5+hh*3,Y+10,1,2,'#5a8a2a')}else if(hh==4)R(X+8,Y+6,2,2,['#f6a','#ff6','#adf'][(x+y)%3])}
@@ -216,7 +219,7 @@ function hud(){const z=G.zone;panel(3,3,124,OUTZ(z)?47:38,'#0a0612d8','#ffb050')
  const h=Math.floor(G.time/60)%24,mm=G.time%60,ic=G.time<1140?'☀':'☾';txt(`${season()} ${solOfSeason()} · Y${year()}`,7,12,'#ffd27a',8);txt(ic+' '+String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'),123,12,'#fff',8,'right');
  bar(7,16,G.energy,G.maxEn,'#fc3','EN');bar(7,25,G.hp,100,'#f44','HP');txt(G.money+'cr',123,32,'#7f7',8,'right');
  if(OUTZ(z)){bar(7,34,G.o2,100,G.o2<25&&tick%20<10?'#f00':'#3cf','O2');if(G.o2<25)txt('LOW OXYGEN!',W/2,46,'#f44',9,'center')}
- const zn={farm:'Dome Farm',mine2:0,city:'New Cydonia',surf:'Martian Surface',home:'Your Habitat',cafe:'Red Dust Cafe',shop:'Supply & Tech',cc:'Community Center',valles:'Valles Canyon',clinic:'Cydonia Clinic',biopod:'Bio-Pod',bar:'The Airlock',port:'Shuttle Port',phobos:'Phobos Station',mine:MINE&&MINE.rift?'Hellas Rift - Depth '+G.rfloor:(G.floor>10?'Frozen Depths - ':'Mine - Floor ')+(G.floor>10?'F'+G.floor:G.floor)}[z];txt(zn,W/2,12,'#fff9',8,'center');
+ const zn={farm:'Dome Farm',mine2:0,city:'New Cydonia',surf:'Martian Surface',home:'Your Habitat',cafe:'Red Dust Cafe',shop:'Supply & Tech',cc:'Community Center',valles:'Valles Canyon',clinic:'Cydonia Clinic',biopod:'Bio-Pod',museum:'Cydonia Museum',bar:'The Airlock',port:'Shuttle Port',phobos:'Phobos Station',mine:MINE&&MINE.rift?'Hellas Rift - Depth '+G.rfloor:(G.floor>10?'Frozen Depths - ':'Mine - Floor ')+(G.floor>10?'F'+G.floor:G.floor)}[z];txt(zn,W/2,12,'#fff9',8,'center');
  const boss=ENTS.find(e=>e.t=='queen'||e.t=='wyrm'&&e.awake);if(boss){R(W/2-80,18,160,8,'#000');R(W/2-79,19,158*boss.hp/boss.max,6,'#4df');txt(boss.t=='wyrm'?'SAND WYRM':'CRYSTAL QUEEN',W/2,32,'#bff',7,'center')}
  R(W-46,3,43,19,'#ff6aa8');R(W-45,4,41,17,'#1a0a24');txt('MENU',W-24.5,16,'#fff',8,'center');R(W-67,3,19,19,'#ffb050');R(W-66,4,17,17,'#1a0a24');{const c='#fff',a=W-63,b=7,o=isFS()?3:0;R(a+o,b+o,4,1,c);R(a+o,b+o,1,4,c);R(a+11-o,b+o,4,1,c);R(a+14-o,b+o,1,4,c);R(a+o,b+10+o-o*2,1,4,c);R(a+o,b+13-o,4,1,c);R(a+14-o,b+10-o,1,4,c);R(a+11-o,b+13-o,4,1,c)}
  for(let i=0;i<10;i++){const X=HB.x+i*HB.s,Y=HB.y;R(X,Y,HB.s-1,HB.s-1,i==G.sel?'#ffd27a':'#000c');R(X+1,Y+1,HB.s-3,HB.s-3,i==G.sel?'#4a2a3a':'#2a1a2acc');const s=G.inv[i];if(s){drawIcon(cx,s[0],X+2,Y+2);const it=ITEMS[s[0]];if(it.tool&&G.tools[s[0]]>1)R(X+2,Y+2,3,3,['','','#c96','#46f'][G.tools[s[0]]]);if(!it.tool)txt(s[1],X+HB.s-2,Y+HB.s-2,'#fff',7,'right')}}

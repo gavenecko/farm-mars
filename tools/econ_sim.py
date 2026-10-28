@@ -45,3 +45,21 @@ def run(start=400,sols=7,en=100,water=1.0,till=2,seeds={'pot':6,'let':6,'wht':4}
 if __name__=='__main__':
     for lab,kw in [('current (400cr start)',{}),('tuned (500cr, +lettuce seeds)',{'start':500,'seeds':{'pot':8,'let':10,'wht':4}})]:
         m,log=run(**kw);print('==',lab);[print(' sol %d: cash %5d tiles %3d energyLeft %3d shippedOvernight %4d'%r) for r in log];print(' end-of-season credits',m)
+
+# ---- Round 12: model the live game (v9 start kit, sol-2 grant, quality bonus, mine trips) ----
+def game(vals=None,label='',start=500,grant=150,qual=1.12,mine=120):
+    global CROPS
+    old=CROPS
+    CROPS={'pot':(20,3,45),'let':(12,2,30),'wht':(10,3,25)}
+    for k,v in (vals or {}).items(): CROPS[k]=(CROPS[k][0],CROPS[k][1],v)
+    CROPS={k:(c[0],c[1],round(c[2]*qual)) for k,c in CROPS.items()}
+    m,log=run(start=start,seeds={'pot':8,'let':10,'wht':12},mine=mine)
+    CROPS=old
+    gross=sum(r[4] for r in log)+mine*sum(1 for r in log if r[3]>=30)
+    total=m+grant
+    print('== %-34s end-of-season credits %5d  (gross shipped+mine %d)'%(label,total,gross));return total
+if __name__=='__main__':
+    print('\n-- live-game model (strong player: quality bonus + mine trips) --')
+    game(label='round 11 (pot45 let30 wht25)')
+    game({'pot':43,'let':27,'wht':23},label='round 12 (pot43 let27 wht23)')
+    game({'pot':43,'let':27,'wht':23},label='round 12, casual (no mine)',mine=0,qual=1.0)
