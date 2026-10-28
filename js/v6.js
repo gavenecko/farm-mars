@@ -62,9 +62,9 @@ const RELICS={rel1:['Sojourner Wheel','#b8b8c8',300],rel2:['Microfossil Slab','#
 for(const k in RELICS){const[n,c,v]=RELICS[k];ITEMS[k]={n,c,v,relic:1,d:'A rare Martian relic. Donate it to the Research Archive or sell it.'};RESEARCH.push(k)}
 function pickRelic(){const ks=Object.keys(RELICS),un=ks.filter(k=>!(G.relics||{})[k]);const pool=un.length&&Math.random()<.7?un:ks;return pool[Math.floor(Math.random()*pool.length)]}
 function gotRelic(id,x,y){G.relics=G.relics||{};const nw=!G.relics[id];G.relics[id]=1;add(id);sfx('wed');shake(3);parts(x,y,'#ffd27a',18,2);floatTxt(x,y-12,'RELIC! '+ITEMS[id].n,'#ffd27a');if(nw)toast('New relic found: '+ITEMS[id].n+' ('+Object.keys(G.relics).length+'/6)');checkAch()}
-function digSpots(m,n,ok){const E=[];let g=0;while(E.length<n&&g++<800){const x=3+Math.floor(Math.random()*(m[0].length-6)),y=3+Math.floor(Math.random()*(m.length-6));if(ok(m[y][x],x,y))E.push({k:'dig',x:x*T+8,y:y*T+8})}return E}
-{const _gs=genSurface;genSurface=function(){return _gs().concat(digSpots(MAPS.surf,5,(t,x,y)=>t=='r'&&!isPool(x,y)))}}
-{const _gv=genValles;genValles=function(){return _gv().concat(digSpots(MAPS.valles,4,(t,x)=>(t=='r'||t=='y')&&x>5&&x<41))}}
+function digSpots(m,n,ok,occ=[]){const E=[];let g=0;while(E.length<n&&g++<800){const x=3+Math.floor(Math.random()*(m[0].length-6)),y=3+Math.floor(Math.random()*(m.length-6)),px_=x*T+8,py_=y*T+8;if(ok(m[y][x],x,y)&&!occ.concat(E).some(e=>Math.hypot(e.x-px_,e.y-py_)<T))E.push({k:'dig',x:px_,y:py_})}return E}
+{const _gs=genSurface;genSurface=function(){const B=_gs();return B.concat(digSpots(MAPS.surf,5,(t,x,y)=>t=='r'&&!isPool(x,y),B))}}
+{const _gv=genValles;genValles=function(){const B=_gv();return B.concat(digSpots(MAPS.valles,4,(t,x)=>(t=='r'||t=='y')&&x>5&&x<41,B))}}
 function digAt(){const d=DIRV[G.dir],ax=G.px+d[0]*12,ay=G.py-4+d[1]*12;const e=ENTS.find(e=>e.k=='dig'&&Math.hypot(e.x-ax,e.y-ay)<16);if(!e)return false;if(!useEnergy(3))return true;swing('hoe');sfx('till');e.dead=1;ENTS=ENTS.filter(q=>!q.dead);storeE();
  parts(e.x,e.y,'#a86a3a',12,1.5);const r=Math.random();if(r<.45)gotRelic(pickRelic(),e.x,e.y);else{const it=r<.7?'iron':r<.85?'crys':G.zone=='valles'?'jasp':'cob';add(it,2);floatTxt(e.x,e.y-12,'+2 '+ITEMS[it].n,'#9ef')}G.stats.dug=(G.stats.dug||0)+1;return true}
 // ---------- act / interact wrapper ----------
