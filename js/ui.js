@@ -94,8 +94,8 @@ function shoot(e,a,s,d){PR.push({x:e.x,y:e.y-6,vx:Math.cos(a)*s,vy:Math.sin(a)*s
 // ---------- render ----------
 let LIGHTS=[];const light=(x,y,r,c)=>LIGHTS.push({x,y,r,c});
 // static base-tile layer for big outdoor maps (one blit instead of ~400 per frame)
-const BGK={};function bgCache(z,m){if(z!='valles'&&z!='surf'&&z!='mine')return null;const mw=m[0].length*T,mh=m.length*T;if(mw<W||mh<H)return null;const k=z+(z=='surf'?G.terra:''),sig=z=='mine'?m.map(r=>r.join('')).join(''):'';const o=BGK[k];if(o&&o.m===m&&o.sig===sig)return o.c;
- const c=document.createElement('canvas');c.width=mw;c.height=mh;const g=c.getContext('2d');for(let y=0;y<m.length;y++)for(let x=0;x<m[0].length;x++)g.drawImage(tileImg(z,m[y][x],hash(x,y)%4),x*T,y*T);BGK[k]={m,c,sig};return c}
+const BGK={};function bgCache(z,m){if(z!='valles'&&z!='surf'&&z!='mine'&&z!='farm'&&z!='city')return null;const mw=m[0].length*T,mh=m.length*T;if(mw<W||mh<H)return null;const k=z+(z=='surf'?G.terra:''),sig=z=='mine'||z=='farm'||z=='city'?m.map(r=>r.join('')).join(''):'';const o=BGK[k];if(o&&o.m===m&&o.sig===sig)return o.c;
+ const c=document.createElement('canvas');c.width=mw;c.height=mh;const g=c.getContext('2d');for(let y=0;y<m.length;y++)for(let x=0;x<m[0].length;x++){let t=m[y][x];if(z=='farm'&&'HBTLN'.includes(t))t='g';if(z=='city'&&'HAFLSQ'.includes(t))t='p';g.drawImage(tileImg(z,t,hash(x,y)%4),x*T,y*T)}BGK[k]={m,c,sig};return c}
 function zoneKey(){return G.zone}
 function draw(){if(CRED){drawCredits();return}if(TITLE){drawTitle();return}const z=G.zone,m=curMap(),mw=m[0].length*T,mh=m.length*T;LIGHTS=[];
  CAMX=0;const tox=Math.max(0,Math.min(mw-W,G.px-W/2)),toy=Math.max(0,Math.min(mh-H,G.py-H/2-10));if(CAM.z!==G.zone||FADE>0||Math.abs(CAM.x-tox)>90||Math.abs(CAM.y-toy)>90){CAM.x=tox;CAM.y=toy}else{CAM.x+=(tox-CAM.x)*.2;CAM.y+=(toy-CAM.y)*.2}CAM.z=G.zone;let ox=Math.round(CAM.x),oy=Math.round(CAM.y);if(mw<W)ox=Math.round(-(W-mw)/2);if(mh<H)oy=Math.round(-(H-mh)/2);
@@ -135,7 +135,7 @@ function draw(){if(CRED){drawCredits();return}if(TITLE){drawTitle();return}const
   if(e.k=='ore')D.push([Y+4,()=>drawOre(e,X,Y)]),e.t!='stone'&&e.t!='iron'&&light(X,Y-4,18,ITEMS[e.t].c);
   if(e.k=='plant'){D.push([Y+4,()=>drawPlant(e,X,Y)]);light(X,Y-4,24,ITEMS[e.t].c)}
   if(e.k=='bug'){D.push([Y+4,()=>drawBug(e,X,Y)]);if(e.t=='queen')light(X,Y-10,60,'#4df')}}
- D.sort((a,b)=>a[0]-b[0]).forEach(d=>d[1]());
+ if(typeof drawExtra=='function')drawExtra(D,ox,oy,z);D.sort((a,b)=>a[0]-b[0]).forEach(d=>d[1]());
  PR.forEach(p=>{R(p.x-ox-2,p.y-oy-2,4,4,p.c);R(p.x-ox-1,p.y-oy-1,2,2,'#fff');light(p.x-ox,p.y-oy,10,p.c)});
  P.forEach(p=>R(p.x-ox,p.y-oy,2,2,p.c));
  overlays(ox,oy);weather(ox,oy);lighting(ox,oy);if(z=='surf'||z=='valles')skyBand(ox,oy);if(G.zone=='city'&&isFestival()&&G.time>=480&&G.time<1000)festival(ox,oy);if(FISHING)drawFish(ox,oy);
