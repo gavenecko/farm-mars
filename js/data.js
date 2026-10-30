@@ -40,7 +40,7 @@ const UPG=[null,null,{cr:500,in:{iron:10}},{cr:1500,in:{cob:6,crys:4}}];
 const TOOL_TIER_NAMES=['','Basic','Ferrite','Cobalt'];
 // NPC: schedule entries [hour,zone,x,y]
 const NPCS=[
- {id:'ava',n:'Ava',mar:1,look:{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#1fb5b5',pants:'#244',acc:'#ffd23a'},likes:['crys','cob','pla','glo'],hates:['chit'],
+ {id:'ava',n:'Ava',mar:1,look:{skin:'#e8b48a',hair:'#d0602a',style:'bob',top:'#1f8a8f',pants:'#244',acc:'#ffd23a'},likes:['crys','cob','pla','glo'],hates:['chit'],
   sched:[[6,'home',0,0],[9,'cc',11,5],[16,'city',13,13],[20,'cafe',8,5],[22,'home',0,0]],
   lines:[["Hey. I'm Ava, life-support engineer. The dome seals hiss at night. You get used to it.","Crystals tune the reactors. Bring me some sometime?"],
    ["You're out on the surface a lot. Check your O2 seals twice.","I rebuilt the plaza fountain pump last week. Nobody noticed. Except you, now."],
@@ -50,7 +50,7 @@ const NPCS=[
   ev:{3:["Ava is elbow-deep in a pump housing.","AVA: Hand me that wrench? ...Thanks. Most people just watch.","AVA: My mom was a welder on the first Phobos station. She said: fix what you can, love what you can't.","You spend an hour helping. Ava smiles more than usual."],
    6:["Ava finds you by the airlock at dusk.","AVA: I wanted to show you something. Look up.","Through the dome glass, Phobos crosses the sky, small and fast.","AVA: I come here when I miss home. Now... it feels like this is home."],
    9:["Ava is waiting at your farm gate, holding a tiny crystal flower she welded herself.","AVA: I made this. For you. It'll never wilt. Kind of like... how I feel.","Her face turns as pink as her hair."]}},
- {id:'kai',n:'Kai',mar:1,look:{skin:'#c98a5e',hair:'#1a1a2a',style:'spiky',top:'#d43a9a',pants:'#333',acc:'#fff'},likes:['glowcap','let','coffee','pie','salad'],hates:['iron'],
+ {id:'kai',n:'Kai',mar:1,look:{skin:'#c98a5e',hair:'#1e2a5e',style:'spiky',top:'#1c1c26',pants:'#333',acc:'#fff'},likes:['glowcap','let','coffee','pie','salad'],hates:['iron'],
   sched:[[6,'home',0,0],[8,'cafe',7,2],[17,'city',8,9],[21,'home',0,0]],
   lines:[["Welcome to the Red Dust Cafe! I'm Kai. Coffee's synthetic but the love is real.","Fresh greens are so rare here. You grow them? Wow."],
    ["I'm experimenting with Glowcap tea. You're my official taste tester now.","Old Mo tips in ferrite. I don't know what to do with ferrite."],
@@ -73,12 +73,12 @@ const NPCS=[
    6:["OLD MO: Here. My old helmet lamp. It's lucky.","(Mo pats your shoulder. Max energy +10!)"]}},
 ];
 NPCS.push(
- {id:'zara',n:'Zara',mar:1,look:{skin:'#8a5a3a',hair:'#3af0ff',style:'long',top:'#ff7a1a',pants:'#2a2a3a',acc:'#fff'},likes:['pla','koi','coffee','dst'],hates:['let'],
+ {id:'zara',n:'Zara',mar:1,look:{skin:'#8a5a3a',hair:'#7a3ac8',style:'long',top:'#4a2a7a',pants:'#2a2a3a',acc:'#fff'},likes:['pla','koi','coffee','dst'],hates:['let'],
   sched:[[6,'home',0,0],[8,'city',26,12],[12,'cafe',10,2],[15,'shop',8,4],[19,'city',26,9],[22,'home',0,0]],
   lines:[["Zara, shuttle pilot. I fly the Phobos run twice a week. Don't touch my jacket."],["Storm Pepper chili is the only thing that keeps me awake on night flights."],["Ever seen Mars from orbit? It's all rust and scars. I love it."],["Next time I fly, I want you in the co-pilot seat. No arguments."]],
   season:{Storm:"Storm season grounds every shuttle. I hate sitting still."},
   ev:{3:["Zara is upside-down under a shuttle landing strut.","ZARA: Hold the light steady. ...Steady! Okay, good. You're useful.","She grins, grease on her nose."],6:["ZARA: I almost crashed once. Dust storm, zero visibility.","ZARA: I kept thinking about the colony lights. Something to come home to.","ZARA: Lately that's... the farm. You."],9:["Zara hands you a pair of old pilot wings.","ZARA: These were my first. I want you to have them.","ZARA: Fly with me. Always."]}},
- {id:'theo',n:'Theo',mar:1,look:{skin:'#f0c8a0',hair:'#e8d070',style:'bob',top:'#3a4aa0',pants:'#2a2a4a',acc:'#bff'},likes:['crys','frb','eel','pie'],hates:['venom'],
+ {id:'theo',n:'Theo',mar:1,look:{skin:'#f0c8a0',hair:'#a88a5a',style:'bob',top:'#b8a07a',pants:'#2a2a4a',acc:'#bff'},likes:['crys','frb','eel','pie'],hates:['venom'],
   sched:[[6,'home',0,0],[9,'cc',13,5],[13,'city',6,13],[18,'cafe',12,2],[22,'home',0,0]],
   lines:[["Oh! Hi. Theo, colony astronomer. I mostly talk to telescopes."],["Did you know Phobos is falling toward Mars? Very slowly. Don't worry."],["I named a minor asteroid after your farm. It's tiny. Like a potato."],["The stars are nice. But I'd rather look at you. ...Did I say that out loud?"]],
   season:{Frost:"Frost nights are clearest. Perfect for stargazing."},
