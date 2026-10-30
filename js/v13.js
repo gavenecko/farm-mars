@@ -120,7 +120,7 @@ drawModal=function(){const m=modal;mnorm(m);if(m.pi>=m.pages.length)m.pi=m.pages
  if(L.hasP){const pw=DB.pf,px0=x+w-pw-6,py0=y+4,phh=62;frame(px0,py0,pw,phh,'#120a18');const bg=shade(m.look.top||'#444',-.55);R(px0+6,py0+6,pw-12,phh-12,bg);R(px0+6,py0+phh-22,pw-12,16,shade(bg,-.25));R(px0+6,py0+phh-22,pw-12,1,shade(bg,.2));
   for(let i=0;i<5;i++)R(px0+10+i*13,py0+10+(i*7)%9,1,1,'#fff8');
   const typing=m.ch<pg.length,ci=pg[Math.floor(m.ch)]||' ',talk=typing&&/[a-z0-9]/i.test(ci)&&(Math.floor(m.ch/2)%2==0),blink=(tick+((m.name||'').length*37))%170<7;
-  cx.save();cx.beginPath();cx.rect(px0+6,py0+6,pw-12,phh-12);cx.clip();drawPortrait(cx,px0+6,py0+6+(phh-12-56),m.look,4,curMood(m),blink,talk);cx.restore();
+  cx.save();cx.beginPath();cx.rect(px0+6,py0+6,pw-12,phh-12);cx.clip();drawPortrait(cx,px0+6,py0+5,m.look,4,curMood(m),blink,talk);cx.restore();
   const nm=(m.name||'').replace(/ ?- ?Heart Event| ♥ Event/,''),np=y+h-20;R(px0-2,np,pw+4,16,'#140a10');R(px0-1,np+1,pw+2,14,'#7a3a1a');R(px0,np+2,pw,12,'#b8642a');R(px0,np+2,pw,1,'#f0a060');
   cx.font='8px monospace';let fs=8;while(fs>5&&cx.measureText(nm).width>pw-8){fs--;cx.font=fs+'px monospace'}txt(nm,px0+pw/2,np+11,'#fff3d0',fs,'center');
   if(m.name&&/Event/.test(m.name))txt('♥',px0+pw-6,py0+14,'#ff7aa8',8,'center')}

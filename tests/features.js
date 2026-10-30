@@ -60,7 +60,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   return tagged+' lines tagged'}));
  await t('portraits: all residents, child, player, spouse in 6 moods + blink + talk render',async()=>ev(()=>{const looks=[PLOOK,...NPCS.map(n=>n.look),{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}];let k=0;
   const c=document.createElement('canvas');c.width=64;c.height=56;const g=c.getContext('2d');for(const L of looks)for(const m of['','happy','sad','angry','love','think'])for(const b of[0,1])for(const tk of[0,1]){g.clearRect(0,0,64,56);drawPortrait(g,0,0,L,4,m,b,tk);const a=g.getImageData(0,0,64,56).data;let op=0;for(let i=3;i<a.length;i+=4)if(a[i])op++;if(op<1200)throw new Error('blank '+m);k++}
-  const sp=G.spouse;G.spouse='ava';FM13.bust2(NPCS[0].look,'love',0,0);G.spouse=sp;return k+' portraits'}));
+  const sp=G.spouse;G.spouse='ava';FM13.bust2(NPCS[0].look,'love',0,0);G.spouse=sp;const q=FM13.bust2(NPCS[0].look,'happy',0,0);if(q.width!=64||q.height!=56||!window.FM14)throw new Error('not anime 64x56');return k+' portraits (64x56 anime)'}));
  await t('screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,450));await page.screenshot({path:path.join(SHOTS,n)})};
   await shot('fm13_museum.png',()=>{for(const i of FM10.MALL.slice(0,22))G.muse[i]=1;enter('museum',6,5,0);G.time=700;modal=null;if(npcRT.theo){npcRT.theo.zone='museum';npcRT.theo.x=10*T+8;npcRT.theo.y=4*T+8}});
   await shot('fm13_dust.png',()=>{G.wx='dust';DUSTD=-1;SURF=null;enter('surf',33,37,0);G.time=800;modal=null});
@@ -80,15 +80,15 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
    const q=c.getContext('2d');q.imageSmoothingEnabled=false;q.drawImage(o,0,0,cw*S,ch*S);document.body.appendChild(c)});
   await new Promise(r=>setTimeout(r,200));await (await page.$('#cmp')).screenshot({path:path.join(SHOTS,'fm15_before_after.png')});
   await ev(()=>{document.getElementById('cmp').remove()});
-  await shot('fm16_dlg_happy.png',()=>{modal=null;G.time=12*60;enter('city',16,14,0);placeNPCs(true);const n=NPCS.find(q=>q.id=='kai');say(n.n,"Glowcaps! You remembered! I'm making the Glowcap Omelette tonight, and you're getting the first plate. $h",null,n.look);modal.ch=48});
+  await shot('fm17_dlg_happy.png',()=>{modal=null;G.time=12*60;enter('city',16,14,0);placeNPCs(true);const n=NPCS.find(q=>q.id=='kai');say(n.n,"Glowcaps! You remembered! I'm making the Glowcap Omelette tonight, and you're getting the first plate. $h",null,n.look);modal.ch=48});
   await shot('fm16_dlg_angry.png',()=>{const n=NPCS.find(q=>q.id=='mo');say(n.n,"Iron? You brought ME iron? I've dug forty years of the stuff out of those tunnels. Take it back! $a",null,n.look);modal.ch=1e4});
   await shot('fm16_dlg_think.png',()=>{const n=NPCS.find(q=>q.id=='theo');say(n.n,"Hmm... if Phobos keeps drifting closer, then in fifty million years... Do you think anyone will be here to see it? $t",[{t:'Definitely. Our grandkids.'},{t:"Let's make sure of it."},{t:'That is a long time, Theo.'}],n.look);modal.ch=1e4});
-  await shot('fm16_dlg_love.png',()=>{const n=NPCS.find(q=>q.id=='zara');say(n.n+' - Heart Event',["I wrote it after visiting your farm. It's called 'Home'. $l"],null,n.look);modal.ch=1e4});
+  await shot('fm17_dlg_love.png',()=>{const n=NPCS.find(q=>q.id=='zara');say(n.n+' - Heart Event',["I wrote it after visiting your farm. It's called 'Home'. $l"],null,n.look);modal.ch=1e4});
   await shot('fm16_letter.png',()=>{modal=null;G.mail=G.mail||{box:[],read:{}};if(typeof mailMenu=='function')mailMenu();if(G.mail.box.length&&typeof readLetter=='function'){modal=null;readLetter(G.mail.box[G.mail.box.length-1])}if(modal)modal.ch=1e4});
   await ev(()=>{modal=null;const old=document.getElementById('cmp');if(old)old.remove();const looks=[['You',PLOOK],...NPCS.map(n=>[n.n,n.look]),['Child',{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}]],M=[['neutral',''],['happy','happy'],['sad','sad'],['angry','angry'],['love','love'],['thinking','think'],['talking','',1]];
    const cw=60+M.length*70,ch=24+looks.length*62,c=document.createElement('canvas');c.id='cmp';c.width=cw;c.height=ch;c.style.cssText='position:fixed;left:0;top:0;z-index:99;width:'+cw+'px;height:'+ch+'px;image-rendering:pixelated';const g=c.getContext('2d');g.imageSmoothingEnabled=false;
    g.fillStyle='#1a1030';g.fillRect(0,0,cw,ch);g.font='10px monospace';g.fillStyle='#ffd27a';M.forEach((m,i)=>g.fillText(m[0],64+i*70,14));
    looks.forEach(([nm,L],r)=>{g.fillStyle='#f4ead8';g.fillText(nm.slice(0,9),2,24+r*62+34);M.forEach((m,i)=>{g.fillStyle=r%2?'#2a1a40':'#24163a';g.fillRect(62+i*70,20+r*62,66,58);drawPortrait(g,63+i*70,21+r*62,L,4,m[1],false,!!m[2])})});document.body.appendChild(c)});
-  await new Promise(r=>setTimeout(r,200));await (await page.$('#cmp')).screenshot({path:path.join(SHOTS,'fm16_portrait_sheet.png')});
+  await new Promise(r=>setTimeout(r,200));await (await page.$('#cmp')).screenshot({path:path.join(SHOTS,'fm17_portrait_sheet.png')});
   await ev(()=>{document.getElementById('cmp').remove();modal=null;enter('farm',13,9,2)});return 'saved'});
 };
