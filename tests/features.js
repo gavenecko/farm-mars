@@ -37,7 +37,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   const bad=[];for(const tm of[6*60+30,23*60]){G.time=tm;placeNPCs(true);for(const id in FM12.HOMES)if(npcRT[id].zone!='h_'+id)bad.push(id+'@'+tm+'='+npcRT[id].zone)}
   G.time=12*60;placeNPCs(true);const away=Object.keys(FM12.HOMES).filter(id=>npcRT[id].zone.startsWith('h_'));if(bad.length)throw new Error(bad.join(' '));enter('city',16,14,0);return 'ok, at noon home: '+(away.join(',')||'none')}));
  await t('homes: home dialogue, heart event, readable item, gifting at home',async()=>ev(()=>{G.events={theo3:1,theo4:1,theo6:1,theo7:1,theo9:1};const n=NPCS.find(q=>q.id=='theo');G.time=23*60;G.hearts.theo=2;enter('h_theo',5,6,0);placeNPCs(true);G.talked={};talk(n);
-  if(!modal||!FM12.HOMES.theo.home.includes(modal.pages[0]))throw new Error('no home line');modal=null;G.hearts.theo=5;G.talked={};const h0=G.hearts.theo;talk(n);if(!modal||!modal.name.includes('Heart Event'))throw new Error('no event');modal=null;if(!(G.hearts.theo>h0))throw new Error('event hearts');
+  FM13.mnorm(modal);if(!modal||!FM12.HOMES.theo.home.map(s=>s.replace(/ \$[a-z]$/,'')).includes(modal.pages[0]))throw new Error('no home line');modal=null;G.hearts.theo=5;G.talked={};const h0=G.hearts.theo;talk(n);if(!modal||!modal.name.includes('Heart Event'))throw new Error('no event');modal=null;if(!(G.hearts.theo>h0))throw new Error('event hearts');
   const f=FM12.HOMES.theo.f.find(f=>f[0]=='starmap');G.px=f[1]*T+8;G.py=1*T+8;G.dir=0;interact();if(!modal||!modal.pages[0].includes('star chart'))throw new Error('read: '+(modal&&modal.pages[0]));modal=null;
   G.gifted={};const i=G.inv.findIndex(q=>!q);G.inv[i]=['crys',1];G.sel=i;G.talked={};const hb=G.hearts.theo;G.px=npcRT.theo.x+14;G.py=npcRT.theo.y;talk(n);const go=modal&&modal.opts&&modal.opts.find(o=>o.t.startsWith('Give'));if(!go)throw new Error('no give option');modal=null;go.f();modal=null;const gave=!G.inv[i]||G.hearts.theo!=hb;G.inv[i]=null;if(!gave)throw new Error('gift failed');enter('city',16,14,0);return 'ok'}));
  await t('character sprites: player/NPC/kid 4 dirs x 4 frames + portraits render, outlined, no errors',async()=>ev(()=>{const looks=[PLOOK,...NPCS.map(n=>n.look),{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}];let n=0;
@@ -45,6 +45,22 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
    const a=g.getImageData(0,0,24,30).data;let op=0,ol=0;for(let i=0;i<a.length;i+=4){if(a[i+3]==255)op++;if(a[i]==26&&a[i+1]==15&&a[i+2]==26)ol++}if(op<80||ol<20)throw new Error('sprite '+JSON.stringify(L)+' d'+d+' f'+f+' '+op+'/'+ol)}
   const s=FM12.charSprite(NPCS[0].look,1,0),s2=FM12.charSprite(NPCS[0].look,1,1);if(s.toDataURL()==s2.toDataURL())throw new Error('walk frames identical');
   for(const L of looks)for(const m of['','happy','love','angry','sad'])drawPortrait(cx,10,10,L,3,m,false),drawPortrait(cx,10,10,L,2,m,true);return n+' sprites, '+FM12.CC.size+' cached'}));
+ await t('dialogue box: renders framed panel, typewriter, tap finishes then advances, choices by touch',async()=>ev(()=>{const n=NPCS[0];let picked=0;say(n.n,['Hello there, this is a fairly long first line that types out. $h','Second page. $t'],[{t:'Yes',f:()=>{picked=1}},{t:'No'}],n.look);
+  for(let i=0;i<4;i++)update();if(!(modal.ch>0&&modal.ch<modal.pages[0].length))throw new Error('not typing '+modal.ch);draw();
+  const[x,y,w,h]=FM13.dbRect(),d=cx.getImageData(x+2,y+20,1,1).data;if(d[0]<150)throw new Error('frame not drawn '+d.join(','));
+  onTap(100,y+30);if(modal.ch<modal.pages[0].length)throw new Error('tap did not finish');if(modal.pi!=0)throw new Error('advanced too early');onTap(100,y+30);if(modal.pi!=1)throw new Error('no advance');
+  onTap(100,y+30);draw();const r=optRect(0);if(r[1]<0||r[1]+r[3]>H)throw new Error('opt rect '+r);onTap(r[0]+10,r[1]+r[3]/2);if(!picked||modal)throw new Error('choice not picked');
+  say('Sign','A readable sign without a portrait.');modal.ch=999;draw();modal=null;FM10&&FM10.museumView&&(FM10.museumView(),modal.ch=1e4,draw());modal=null;
+  shopMenu&&shopMenu();if(modal){modal.ch=1e4;draw();const k=modal.opts.length-1,rr=optRect(k);if(rr[1]<0)throw new Error('long menu offscreen');modal=null}return 'ok'}));
+ await t('emotion tags switch portrait mood per line; data is tagged',async()=>ev(()=>{const n=NPCS.find(q=>q.id=='kai');say(n.n,['Great to see you! $h','Ugh, not again. $a','Hmm, I wonder... $t','I miss Earth. $s','For you? $l','Plain line.'],null,n.look);
+  FM13.mnorm(modal);const got=[];for(let i=0;i<6;i++){modal.pi=i;got.push(FM13.curMood(modal))}modal=null;const want=['happy','angry','think','sad','love',''];if(got.join()!=want.join())throw new Error(got.join());
+  if(modal==null&&FM13.bust2(n.look,'happy',0,0).toDataURL()==FM13.bust2(n.look,'angry',0,0).toDataURL())throw new Error('moods identical');
+  let tagged=0,total=0;for(const q of NPCS){for(const t of q.lines)for(const l of t){total++;if(/\$[nhsalt]/.test(l))tagged++}for(const k in q.ev)for(const l of q.ev[k]){total++;if(/\$[nhsalt]/.test(l))tagged++}}if(tagged<total)throw new Error('untagged '+(total-tagged));
+  const hq=NPCS.find(q=>q.id=='kai');G.inv[0]=['iron',1];G.sel=0;G.gifted={};gift(hq);FM13.mnorm(modal);const gm=FM13.curMood(modal);modal=null;G.inv[0]=['hoe',1];if(gm!='angry')throw new Error('hated gift mood '+gm);
+  return tagged+' lines tagged'}));
+ await t('portraits: all residents, child, player, spouse in 6 moods + blink + talk render',async()=>ev(()=>{const looks=[PLOOK,...NPCS.map(n=>n.look),{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}];let k=0;
+  const c=document.createElement('canvas');c.width=64;c.height=56;const g=c.getContext('2d');for(const L of looks)for(const m of['','happy','sad','angry','love','think'])for(const b of[0,1])for(const tk of[0,1]){g.clearRect(0,0,64,56);drawPortrait(g,0,0,L,4,m,b,tk);const a=g.getImageData(0,0,64,56).data;let op=0;for(let i=3;i<a.length;i+=4)if(a[i])op++;if(op<1200)throw new Error('blank '+m);k++}
+  const sp=G.spouse;G.spouse='ava';FM13.bust2(NPCS[0].look,'love',0,0);G.spouse=sp;return k+' portraits'}));
  await t('screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,450));await page.screenshot({path:path.join(SHOTS,n)})};
   await shot('fm13_museum.png',()=>{for(const i of FM10.MALL.slice(0,22))G.muse[i]=1;enter('museum',6,5,0);G.time=700;modal=null;if(npcRT.theo){npcRT.theo.zone='museum';npcRT.theo.x=10*T+8;npcRT.theo.y=4*T+8}});
   await shot('fm13_dust.png',()=>{G.wx='dust';DUSTD=-1;SURF=null;enter('surf',33,37,0);G.time=800;modal=null});
@@ -63,5 +79,16 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
    looks.forEach(([nm,L],i)=>{const x=i*26+5;FM12.drawCharV1(g,x,10,L,2,0);FM12.drawCharV1(g,x,38,L,1,1);FM12.drawPortraitV1(g,x-1,58,L,0.75);drawChar(g,x,80,L,2,0);drawChar(g,x,108,L,1,1);});
    const q=c.getContext('2d');q.imageSmoothingEnabled=false;q.drawImage(o,0,0,cw*S,ch*S);document.body.appendChild(c)});
   await new Promise(r=>setTimeout(r,200));await (await page.$('#cmp')).screenshot({path:path.join(SHOTS,'fm15_before_after.png')});
+  await ev(()=>{document.getElementById('cmp').remove()});
+  await shot('fm16_dlg_happy.png',()=>{modal=null;G.time=12*60;enter('city',16,14,0);placeNPCs(true);const n=NPCS.find(q=>q.id=='kai');say(n.n,"Glowcaps! You remembered! I'm making the Glowcap Omelette tonight, and you're getting the first plate. $h",null,n.look);modal.ch=48});
+  await shot('fm16_dlg_angry.png',()=>{const n=NPCS.find(q=>q.id=='mo');say(n.n,"Iron? You brought ME iron? I've dug forty years of the stuff out of those tunnels. Take it back! $a",null,n.look);modal.ch=1e4});
+  await shot('fm16_dlg_think.png',()=>{const n=NPCS.find(q=>q.id=='theo');say(n.n,"Hmm... if Phobos keeps drifting closer, then in fifty million years... Do you think anyone will be here to see it? $t",[{t:'Definitely. Our grandkids.'},{t:"Let's make sure of it."},{t:'That is a long time, Theo.'}],n.look);modal.ch=1e4});
+  await shot('fm16_dlg_love.png',()=>{const n=NPCS.find(q=>q.id=='zara');say(n.n+' - Heart Event',["I wrote it after visiting your farm. It's called 'Home'. $l"],null,n.look);modal.ch=1e4});
+  await shot('fm16_letter.png',()=>{modal=null;G.mail=G.mail||{box:[],read:{}};if(typeof mailMenu=='function')mailMenu();if(G.mail.box.length&&typeof readLetter=='function'){modal=null;readLetter(G.mail.box[G.mail.box.length-1])}if(modal)modal.ch=1e4});
+  await ev(()=>{modal=null;const old=document.getElementById('cmp');if(old)old.remove();const looks=[['You',PLOOK],...NPCS.map(n=>[n.n,n.look]),['Child',{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}]],M=[['neutral',''],['happy','happy'],['sad','sad'],['angry','angry'],['love','love'],['thinking','think'],['talking','',1]];
+   const cw=60+M.length*70,ch=24+looks.length*62,c=document.createElement('canvas');c.id='cmp';c.width=cw;c.height=ch;c.style.cssText='position:fixed;left:0;top:0;z-index:99;width:'+cw+'px;height:'+ch+'px;image-rendering:pixelated';const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+   g.fillStyle='#1a1030';g.fillRect(0,0,cw,ch);g.font='10px monospace';g.fillStyle='#ffd27a';M.forEach((m,i)=>g.fillText(m[0],64+i*70,14));
+   looks.forEach(([nm,L],r)=>{g.fillStyle='#f4ead8';g.fillText(nm.slice(0,9),2,24+r*62+34);M.forEach((m,i)=>{g.fillStyle=r%2?'#2a1a40':'#24163a';g.fillRect(62+i*70,20+r*62,66,58);drawPortrait(g,63+i*70,21+r*62,L,4,m[1],false,!!m[2])})});document.body.appendChild(c)});
+  await new Promise(r=>setTimeout(r,200));await (await page.$('#cmp')).screenshot({path:path.join(SHOTS,'fm16_portrait_sheet.png')});
   await ev(()=>{document.getElementById('cmp').remove();modal=null;enter('farm',13,9,2)});return 'saved'});
 };

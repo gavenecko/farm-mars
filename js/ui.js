@@ -49,7 +49,7 @@ let lastHour=-1;
 function update(){tick++;if(CRED){CRED.t++;CRED.y-=.35;setMusic('credits');if(CRED.y<-CREDL.length*14-60)endCredits();return}if(TITLE)return;if(toastT)toastT--;if(swingT)swingT--;if(invT)invT--;for(const k in btnFx)if(btnFx[k])btnFx[k]--;
  P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=p.gr;p.l--});P=P.filter(p=>p.l>0);FT.forEach(f=>{f.y-=.4;f.l--});FT=FT.filter(f=>f.l>0);
  setMusic(G.zone=='mine'&&MINE.boss&&!G.bossDead?'boss':EXITS[G.zone]?'indoor':G.zone=='valles'?(ENTS.some(e=>e.t=='wyrm'&&e.awake)?'boss':'surf'):G.zone);
- if(modal){if(modal.ch<modal.pages[modal.pi].length){modal.ch+=1.5;if(tick%4==0&&modal.look)sfx('talk')}return}
+ if(modal){if(modal.ch<modal.pages[modal.pi].length){modal.ch+=1.5;if(tick%4==0&&modal.look)sfx('blip')}return}
  if(menu)return;
  if(tick%300==0){G.time+=10;if(G.time>=1560){if(OUTZ(G.zone))G.money=Math.max(0,G.money-Math.min(500,Math.floor(G.money*.1)));sleep(true);return}}
  const hr=Math.floor(G.time/60);if(hr!=lastHour){lastHour=hr;placeNPCs(false);checkAch()}
