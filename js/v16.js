@@ -2,7 +2,7 @@
 (()=>{
 // ---------- illustrated event CGs (lazy-loaded HTML overlay) ----------
 const CGI={},CGF={};let cgEl=null,cgCap=null,cgImg=null,CG=null;
-function cgLoad(k){if(CGI[k]||CGF[k])return CGI[k];const im=new Image();im.decoding='async';im.onload=()=>{im._ok=1};im.onerror=()=>{CGF[k]=1};im.src='assets/cg/'+k+'.webp?v=19';CGI[k]=im;return im}
+function cgLoad(k){if(CGI[k]||CGF[k])return CGI[k];const im=new Image();im.decoding='async';im.onload=()=>{im._ok=1};im.onerror=()=>{CGF[k]=1};im.src='assets/cg/'+k+'.webp?v=20';CGI[k]=im;return im}
 function cgEnsure(){if(cgEl)return;cgEl=document.createElement('div');cgEl.id='cgov';cgEl.style.cssText='position:fixed;display:none;pointer-events:none;z-index:6;overflow:hidden;background:#000;opacity:0;transition:opacity .5s';
  cgImg=document.createElement('img');cgImg.style.cssText='width:100%;height:100%;object-fit:cover;display:block';cgEl.appendChild(cgImg);
  cgCap=document.createElement('div');cgCap.style.cssText='position:absolute;left:0;right:0;bottom:0;padding:1.2% 3% 2.2%;background:linear-gradient(transparent,rgba(10,4,20,.82) 30%);color:#fff;font:600 2.6vmin/1.35 system-ui,sans-serif;text-shadow:0 1px 3px #000';cgEl.appendChild(cgCap);document.body.appendChild(cgEl)}
@@ -37,9 +37,10 @@ function dustMenu(){const S=[['Starlight Tonic',5,()=>add('startonic')],['Meteor
  say('Stardust Exchange','You have '+(G.dust||0)+' stardust.',S.map(([n,c,f])=>({t:n+' - '+c+' dust',f:()=>{if((G.dust||0)<c){toast('Not enough stardust');sfx('bad')}else if(f()!==false){G.dust-=c;sfx('coin')}dustMenu()}})).concat([{t:'Back',f:sfMenu}]))}
 function dateMenu(){const c=NPCS.filter(n=>G.spouse==n.id||(G.hearts[n.id]||0)>=4);
  if(!c.length){say('Starfall Night','You watch the meteors alone. Maybe next season you will have someone to share them with (4+ hearts).');G.sfDate=G.day;return}
- say('Starfall Night','Who will you watch the sky with?',c.slice(0,5).map(n=>({t:n.n+(G.spouse==n.id?' ♥':''),f:()=>{G.sfDate=G.day;addHearts(n,1);sfx('heart');G.stats.sfDates=(G.stats.sfDates||0)+1;
+ say('Starfall Night','Who will you watch the sky with?',c.slice(0,5).map(n=>({t:n.n+(G.spouse==n.id?' ♥':''),f:()=>{G.sfDate=G.day;addHearts(n,1);sfx('heart');G.stats.sfDates=(G.stats.sfDates||0)+1;stargaze(n)}})))}
+function stargaze(n){
   const L={ava:"Ava: \"Every streak up there is a rock that never made it to the ground. Lucky us - we did.\"",kai:"Kai: \"I closed the bar early for this. Don't tell anyone. ...Okay, tell everyone, I don't care.\"",zara:"Zara: \"I've flown through those trails. It's prettier from down here - with you.\"",theo:"Theo: \"Comet 2081-Ares. Debris at seventy km per second. ...Sorry. It's also just really, really beautiful.\""}[n.id]||(n.n+': "Make a wish! Quick!"');
-  showCG('starfall','Starfall Night',['You climb the ridge outside the dome with '+n.n+' and spread a blanket on the red sand.',L,'Meteors fall until the sky runs out of stars to drop. Your friendship with '+n.n+' grows.'])}})))}
+  const k=['ava','kai','zara','theo'].includes(n.id)?'sf_'+n.id:'starfall';showCG(k,'Starfall Night',['You climb the ridge outside the dome with '+n.n+' and spread a blanket on the red sand.',L,'Meteors fall until the sky runs out of stars to drop. Your friendship with '+n.n+' grows.'])}
 {const _in=interact;interact=function(){if(!nearNPC()&&G.zone=='city'&&isSF()){const[fx,fy]=facingTile();if(tileAt(fx,fy)=='F'){sfMenu();return}}
  if(!nearNPC()&&G.zone=='home'&&G.decor&&G.decor.scope&&Math.hypot(G.px-(10*T+8),G.py-(6*T+8))<28){scopeMenu();return}return _in()}}
 {const _a=act;act=function(){if(!SC&&G.zone=='home'&&G.decor&&G.decor.scope&&!nearNPC()&&Math.hypot(G.px-(10*T+8),G.py-(6*T+8))<20){scopeMenu();return}return _a()}}
@@ -74,7 +75,7 @@ function meteors(){for(let i=0;i<4;i++){const p=((tick+i*53)%140)/60;if(p>1)cont
 
 // ---------- telescope: constellation journal ----------
 const CONS=[['The Rover','Six wheels and a dust plume. Every colony kid finds it first.'],['Olympus','A giant volcano drawn in nine stars - the tallest on any world.'],['The Lantern','Ice Lantern Night wishes are said to rise here.'],['Deimos Hound','A loyal dog chasing the little moon around the sky.'],['The Aunt','Your aunt named this one. Its brightest star is a seed.'],['Valles Wyrm','A long, coiling worm of faint red stars.'],['The Shuttle','Zara swears it points toward Earth. It does, sort of.'],['Glowcap','Five blue stars clustered like a mushroom cap.'],['The Miner','Old Mo\'s favourite: a pick raised to strike gold.'],['Earth','Not a constellation - a pale blue dot. Everyone goes quiet.'],['The Founders','Eight stars, one for each of the first colonists.'],['The Farmer','A new one. Theo insists it appeared the year you arrived.']];
-window.FM16={CONS,showCG,CGI,cgLoad,sfMenu,dustMenu,scStart,scopeMenu,state:()=>({cg:CG&&CG.k,cgShown:!!cgEl&&cgEl.style.display=='block',sc:SC})};
+window.FM16={CONS,showCG,stargaze,CGI,cgLoad,sfMenu,dustMenu,scStart,scopeMenu,state:()=>({cg:CG&&CG.k,cgShown:!!cgEl&&cgEl.style.display=='block',sc:SC})};
 function scopeMenu(){G.stars=G.stars||{};const n=Object.keys(G.stars).length,night=G.time>=20*60||G.time<5*60;
  const o=[];if(night&&G.wx!='dust'&&G.scopeDay!=G.day&&n<12)o.push({t:'Look through the telescope',f:observe});o.push({t:'Star journal ('+n+'/12)',f:journal},{t:'Leave'});
  say('Telescope',n>=12?'Your star chart is complete. The sky feels like an old friend.':!night?'Too bright. Come back after 20:00.':G.wx=='dust'?'A dust storm hides every star tonight.':G.scopeDay==G.day?'You already charted the sky tonight. Get some sleep.':'Clear skies tonight. You have charted '+n+' of 12 constellations.',o)}

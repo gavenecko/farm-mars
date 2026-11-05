@@ -79,13 +79,47 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   let st=FM16.state().sc,n=0;while(!st.over&&n<4000){const tg=st.it.filter(i=>i.k!='rock').sort((a,b)=>b.y-a.y)[0];if(tg)st.tx=tg.x;update();n++}if(!st.over)throw new Error('no end');
   if(st.sc<5)throw new Error('score too low '+st.sc);if(G.dust-d0!=st.sc)throw new Error('dust mismatch');draw();for(let i=0;i<45;i++)update();onTap(100,100);if(FM16.state().sc)throw new Error('did not exit');
   G.dust=40;delete (G.decor||{}).comet;FM16.dustMenu();modal.opts[2].f();if(!G.decor.comet||G.dust!=20)throw new Error('exchange');FM16.dustMenu();modal.opts[0].f();if(G.dust!=15||!G.inv.some(i=>i&&i[0]=='startonic'))throw new Error('tonic');
-  G.hearts.theo=6;G.sfDate=0;FM16.sfMenu();const o=modal.opts.find(o=>/Watch/.test(o.t));o.f();const th=modal.opts.find(o=>o.t.startsWith('Theo'));const h0=G.hearts.theo;th.f();if(!(G.hearts.theo>h0))throw new Error('hearts');if(FM16.state().cg!='starfall')throw new Error('starfall cg');
+  G.hearts.theo=6;G.sfDate=0;FM16.sfMenu();const o=modal.opts.find(o=>/Watch/.test(o.t));o.f();const th=modal.opts.find(o=>o.t.startsWith('Theo'));const h0=G.hearts.theo;th.f();if(!(G.hearts.theo>h0))throw new Error('hearts');if(FM16.state().cg!='sf_theo')throw new Error('starfall cg');
   modal=null;draw();return 'score '+st.sc+', exchange + date ok'}));
  await t('v19: telescope constellation journal + chibi spacesuit sprites',async()=>ev(()=>{G.decor=G.decor||{};G.decor.scope=1;G.stars={};G.scopeDay=0;G.wx=null;G.time=21*60;G.day=5;FM16.scopeMenu();
   const o=modal.opts.find(o=>/Look/.test(o.t));if(!o)throw new Error('no look option');o.f();if(Object.keys(G.stars).length!=1)throw new Error('stars '+Object.keys(G.stars).length);FM16.scopeMenu();if(modal.opts.some(o=>/Look/.test(o.t)))throw new Error('twice a night');
   for(let i=0;i<12;i++)G.stars[i]=1;G.astro=0;G.scopeDay=0;checkAch();if(!G.ach.astro)throw new Error('astro ach');modal=null;
   const a=charSprite(PLOOK,2,0,true),b=charSprite(PLOOK,2,0,false);if(a.width!=18||b.width!=18)throw new Error('suit not chibi '+a.width);const d=a.getContext('2d').getImageData(0,0,18,27).data;let hel=0;for(let i=0;i<d.length;i+=4)if(d[i]==0xbf&&d[i+1]==0xef&&d[i+2]==0xff)hel++;if(hel<10)throw new Error('no helmet '+hel);
   return 'journal ok; suit sprite with helmet ('+hel+'px)'}));
+ await t('v20: every door in every map is reachable by real joystick movement from spawn + each city entrance, and enters',async()=>ev(async()=>{eval(await (await fetch('tests/walk.js?v=20')).text());
+  modal=null;CUT=null;menu=null;for(const n of NPCS)G.hearts[n.id]=G.hearts[n.id]||0;if(!G.pod){G.pod=1;G.blobs=[{c:'#7affc8'}];applyLayout()}const bad=[],ok=[];
+  const starts={city:[[16,14],[1,10],[15,22],[16,30]],farm:[[13,9]]};
+  for(const k in DOORS){const[z,xy]=k.split(':'),[x,y]=xy.split(',').map(Number);for(const st of starts[z]||[[2,2]]){G.time=DOORS[k][0]=='bar'?19*60:12*60;enter(z,st[0],st[1],0);modal=null;const r=FMWALK.walkTo([x,y]);if(!r.ok||r.zone!=DOORS[k][0])bad.push(k+' from '+st+': '+(r.why||r.zone));else ok.push(k)}}
+  // every interior exit door leads back out
+  for(const z in EXITS){if(z=='phobos')continue;const m=MAPS[z];let dd=null;for(let y=0;y<m.length&&!dd;y++)for(let x=0;x<m[0].length;x++)if(m[y][x]=='D'){dd=[x,y];break}if(!dd){bad.push('no exit door in '+z);continue}
+   let sp=null;for(const k in DOORS)if(DOORS[k][0]==z)sp=[DOORS[k][1],DOORS[k][2]];if(!sp)sp=[dd[0],dd[1]-2];G.time=12*60;enter(z,sp[0],sp[1],0);modal=null;const r=FMWALK.walkTo(dd);if(!r.ok||r.zone!=EXITS[z][0])bad.push('exit '+z+': '+(r.why||r.zone));else ok.push('exit '+z)}
+  // straight joystick push (no drift) from up to 7px off-centre still enters each Habitat Row door (corner assist)
+  for(const id in HOMES){const hm=HOMES[id];for(const off of[-7,-4,4,7]){G.time=12*60;enter('city',hm.out[0],hm.out[1],0);modal=null;G.px+=off;const sgn=hm.door[1]>hm.out[1]?1:-1;let f=0;for(;f<90&&G.zone=='city';f++){joy.on=true;joy.dx=0;joy.dy=sgn;update();modal=null}joy.on=false;if(G.zone!='h_'+id)bad.push('straight '+id+' off '+off)}}
+  // tap-a-door auto-walk
+  G.time=12*60;enter('city',16,14,0);modal=null;const hv=HOMES.vega;FM17.walkToDoor(hv.door[0],hv.door[1]);for(let i=0;i<1500&&G.zone=='city';i++)update();if(G.zone!='h_vega')bad.push('tap-walk vega '+G.zone);
+  if(bad.length)throw new Error(bad.join(' | '));enter('farm',13,9,2);return ok.length+' door walks ok (city/farm doors x entrances, interior exits), straight-push + tap-walk ok'}));
+ await t('v20: debug menu opens (title chip + system menu), sandbox protects real save, every tab renders with big tap targets',async()=>ev(async()=>{
+  save(true);const realKey=slotKey(SLOT),real0=localStorage.getItem(realKey),slot0=SLOT;TITLE=true;onTap(20,10);const el=document.getElementById('dbg');if(!el||el.style.display=='none'||!DBG.open)throw new Error('title chip did not open');
+  if(!/Sandbox/.test(el.textContent))throw new Error('no sandbox gate');FM17.startSandbox();if(SLOT!='dbg'||!G.dbgSandbox)throw new Error('not in sandbox');FM17.render();
+  const bad=[];for(const t of['Warp','Time','Events','People','View','Give','Cheats']){FM17.setTab(t);const bs=[...el.querySelectorAll('.bd button')];if(t!='View'&&bs.length<2||!el.querySelector('.bd').children.length)bad.push(t+' empty');for(const b of bs){const r=b.getBoundingClientRect();if(r.height&&r.height<40)bad.push(t+' small '+b.textContent+' '+r.height)}}
+  FM17.setTab('View');await new Promise(r=>setTimeout(r,50));if(false)bad.push();if(el.querySelectorAll('.bd img[src*=portraits]').length!=60)bad.push('portraits');if(el.querySelectorAll('.bd canvas').length<10)bad.push('sprites');
+  const click=(tab,txt)=>{FM17.openDbg();FM17.setTab(tab);const b=[...el.querySelectorAll('.bd button')].find(b=>b.textContent==txt);if(!b)throw new Error('no button '+tab+'/'+txt);b.click()};
+  click('Give','+10000cr');const m=G.money;if(m<10000)bad.push('money');click('People','+1');click('Time','Storm');if(seasonIdx()!=3)bad.push('season');click('Time','21:00');if(G.time!=1260)bad.push('hour');
+  for(const z of Object.keys(MAPS)){FM17.openDbg();FM17.setTab('Warp');const b=[...el.querySelectorAll('.bd button')].find(b=>b.textContent==((window.HOMEN&&HOMEN[z])||({farm:'Farm',city:'New Cydonia (city)',home:'Your habitat',cafe:'Cafe',shop:'Shop',cc:'Community Center',surf:'Mars surface',valles:'Valles Canyon',clinic:'Clinic',bar:'The Airlock (bar)',port:'Shuttle Port',phobos:'Phobos Station',biopod:'Bio-Pod',museum:'Museum'}[z])||z));if(!b){bad.push('warp btn '+z);continue}b.click();if(G.zone!=z)bad.push('warp '+z+'->'+G.zone);for(let i=0;i<3;i++){update();draw()}if(feetFree&&!feetFree(G.px,G.py))bad.push('warp stuck '+z)}
+  click('Warp','B10');if(G.zone!='mine'||G.floor!=10)bad.push('mine');click('Warp','Rift 3');if(G.zone!='mine')bad.push('rift');
+  click('Cheats','God mode');click('Cheats','Infinite energy & O2');click('Cheats','No clip');click('Cheats','Show collision grid');if(!(DBG.god&&DBG.inf&&DBG.noclip&&DBG.grid))bad.push('toggles');FM17.closeDbg();G.energy=1;const hp=G.hp;hurt(50);update();draw();if(G.energy!=G.maxEn||G.hp<hp)bad.push('god/inf');
+  FM17.openDbg();FM17.setTab('Cheats');for(const t of['God mode','Infinite energy & O2','No clip','Show collision grid'])[...el.querySelectorAll('.bd button')].find(b=>b.textContent==t).click();FM17.closeDbg();
+  if(localStorage.getItem(realKey)!==real0)bad.push('REAL SAVE CHANGED');
+  menu=null;modal=null;openMenu('system');draw();menuTap(W/2,36+9*18+6);if(!DBG.open)bad.push('system menu entry');FM17.closeDbg();menu=null;
+  FM17.leaveSandbox();if(!TITLE)bad.push('leave');if(localStorage.getItem(slotKey('dbg')))bad.push('sandbox not cleared');startSlot(slot0);modal=null;CUT=null;
+  if(bad.length)throw new Error(bad.join(' | '));return '7 tabs, '+Object.keys(MAPS).length+' warps, toggles, real save untouched'}));
+ await t('v20: every event replay (story, weddings, stargazing, child, heart events, CGs) runs and restores state',async()=>ev(async()=>{modal=null;CUT=null;G.dbgSandbox=1;const el=()=>document.getElementById('dbg');FM17.openDbg();FM17.setTab('Events');
+  const labels=[...el().querySelectorAll('.bd button')].map((b,i)=>i);let n=0;const bad=[];
+  for(const i of labels){FM17.openDbg();FM17.setTab('Events');const b=el().querySelectorAll('.bd button')[i];const lbl=b.textContent;const before=JSON.stringify({h:G.hearts,s:G.spouse,d:G.day,m:G.money,e:G.events,k:G.kids,c:G.colony});b.click();
+   let f=0;for(;f<6000&&(modal||CUT||DBG.replay);f++){if(CUT){CUT.ch=1e9;cutNext()}else if(modal){if(modal.opts){modal=null}else{modal.ch=1e9;modalAdvance(-1)}}else if(window.FM16&&FM16.state().sc){const s=FM16.state().sc;if(s.over>50){onTap(10,10);modal=null}}update();if(f%20==0)draw()}
+   if(DBG.replay||modal||CUT)bad.push(lbl+' did not finish');const after=JSON.stringify({h:G.hearts,s:G.spouse,d:G.day,m:G.money,e:G.events,k:G.kids,c:G.colony});if(after!=before)bad.push(lbl+' changed state');n++}
+  delete G.dbgSandbox;if(window.__err)bad.push('err '+window.__err.message);if(bad.length)throw new Error(bad.slice(0,8).join(' | '));return n+' replays ok, state restored each time'}));
+ await t('v20: Starfall CG matches the chosen partner',async()=>ev(()=>{const r=[];for(const n of NPCS){FM16.stargaze(n);r.push(n.id+':'+FM16.state().cg);modal=null;draw()}const want=id=>['ava','kai','zara','theo'].includes(id)?'sf_'+id:'starfall';const bad=r.filter(x=>{const[i,c]=x.split(':');return c!=want(i)});if(bad.length)throw new Error(bad.join(','));return r.join(' ')}));
  await t('screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,450));await page.screenshot({path:path.join(SHOTS,n)})};
   await shot('fm13_museum.png',()=>{for(const i of FM10.MALL.slice(0,22))G.muse[i]=1;enter('museum',6,5,0);G.time=700;modal=null;if(npcRT.theo){npcRT.theo.zone='museum';npcRT.theo.x=10*T+8;npcRT.theo.y=4*T+8}});
   await shot('fm13_dust.png',()=>{G.wx='dust';DUSTD=-1;SURF=null;enter('surf',33,37,0);G.time=800;modal=null});
@@ -132,4 +166,17 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
    looks.forEach((L,r)=>[2,1,0,3].forEach((d,i)=>{for(const s of[0,1])g.drawImage(charSprite(L,d,0,!!s,0),(4+(i+s*4)*22)*S,(2+r*30)*S,18*S,27*S)}));document.body.appendChild(c);modal=null});
   await new Promise(r=>setTimeout(r,200));await (await page.$('#cmp')).screenshot({path:path.join(SHOTS,'fm19_sprites_suits.png')});
   await ev(()=>{document.getElementById('cmp').remove();modal=null;enter('farm',13,9,2)});return 'saved'});
+ await t('v20 screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,500));await page.screenshot({path:path.join(SHOTS,n)})};
+  await shot('fm20_habitat_row.png',()=>{FM17.closeDbg();modal=null;G.time=12*60;G.wx=null;enter('city',6,15,2);DBG.grid=true});
+  await shot('fm20_habitat_row_nogrid.png',()=>{DBG.grid=false;enter('city',8,17,0);G.py=15*T+8});
+  await shot('fm20_debug_gate.png',()=>{FM17.openDbg()});
+  await shot('fm20_debug_warp.png',()=>{G.dbgSandbox=1;FM17.setTab('Warp')});
+  await shot('fm20_debug_events.png',()=>{FM17.setTab('Events')});
+  await shot('fm20_debug_people.png',()=>{FM17.setTab('People')});
+  await shot('fm20_debug_view.png',()=>{FM17.setTab('View')});
+  await shot('fm20_debug_give.png',()=>{FM17.setTab('Give')});
+  await shot('fm20_system_menu.png',()=>{FM17.closeDbg();delete G.dbgSandbox;openMenu('system')});
+  await shot('fm20_title.png',()=>{menu=null;TITLE=true});
+  await shot('fm20_cg_sf_zara.png',()=>{TITLE=false;FM16.stargaze(NPCS.find(n=>n.id=='zara'));modal.pi=1;modal.ch=1e4});
+  await ev(()=>{modal=null;enter('farm',13,9,2)});return 'saved'});
 };
