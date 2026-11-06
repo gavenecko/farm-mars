@@ -22,7 +22,7 @@ window.FM17={bfs,pass,auto:()=>AUTO,walkToDoor(tx,ty){const p=bfs([Math.floor(G.
 // ---------- update hook: debug pause, cheats, assist, auto-walk, non-destructive replays ----------
 {const _u=update;update=function(){if(DBG.open)return;if(G&&!TITLE){if(DBG.inf){G.energy=G.maxEn;G.o2=100}if(DBG.god)G.hp=Math.max(G.hp,G.maxHp||100)}
  const play=G&&!TITLE&&!modal&&!menu&&!CUT&&!DBG.open;if(play&&AUTO)autoStep();if(play&&!DBG.noclip)assist();const z=G&&G.zone;_u();if(joy.id=='auto'){joy={on:false,id:null,ox:0,oy:0,dx:0,dy:0};if(AUTO&&G.zone!=AUTO.z)AUTO=null}
- if(DBG.replay&&G&&!modal&&!CUT&&!(window.FM16&&FM16.state().sc)&&++DBG.replay.t>3)endReplay()}}
+ if(DBG.replay&&G&&!modal&&!CUT&&!(window.FM16&&FM16.state().sc)&&!(window.FM18&&(FM18.state().lg||FM18.state().derby))&&++DBG.replay.t>3)endReplay()}}
 {const _h=hurt;hurt=function(d,f){if(DBG.god)return;return _h(d,f)}}
 {const _s=solidAt;solidAt=function(x,y){if(DBG.noclip&&G&&Math.abs(x-G.px)<12&&Math.abs(y-G.py)<12&&tileAt(Math.floor(x/T),Math.floor(y/T))!==undefined)return false;return _s(x,y)}}
 {const _sv=save;save=function(q){if(DBG.replay)return;return _sv(q)}}
@@ -72,7 +72,7 @@ function warp(){const zs=Object.keys(MAPS);return[sec('Outdoors & town',...zs.fi
  sec('Resident homes',...zs.filter(z=>z.startsWith('h_')).map(z=>B((window.HOMEN&&HOMEN[z])||z,()=>go(z)))),
  sec('Mine floor',...[1,2,3,4,5,8,10,12,15,18,20,25,30].map(f=>B('B'+f,()=>{closeDbg();modal=null;enterMine(f)}))),
  sec('Hellas Rift depth',...[1,2,3,5,8,10].map(f=>B('Rift '+f,()=>{closeDbg();modal=null;G.riftKey=1;enterRift(f)}))),
- sec('Habitat Row doors (stand in front)',...Object.keys(HOMES||{}).map(id=>B(id,()=>{closeDbg();modal=null;const o=HOMES[id].out;enter('city',o[0],o[1],o[1]>HOMES[id].door[1]?0:2)})))]}
+ sec('Habitat Row doors (stand in front)',...Object.keys(HOMES||{}).filter(id=>!HOMES[id].orbital).map(id=>B(id,()=>{closeDbg();modal=null;const o=HOMES[id].out;enter('city',o[0],o[1],o[1]>HOMES[id].door[1]?0:2)})))]}
 function setDay(d){G.day=Math.max(1,d);placeNPCs(true);lastHour=-1}
 function time(){const yr0=(year()-1)*28;return[h('div',{textContent:'Now: '+season()+' sol '+solOfSeason()+', year '+year()+' - day '+G.day+', '+String(Math.floor(G.time/60)).padStart(2,'0')+':'+String(G.time%60).padStart(2,'0')+(G.wx?' - weather: '+G.wx:'')}),
  sec('Set hour',...[6,8,10,12,14,17,19,21,23,25].map(hh=>B((hh%24)+':00'+(hh>=24?' (late)':''),()=>{G.time=hh*60;lastHour=-1;placeNPCs(true)}))),
@@ -102,7 +102,7 @@ function view(){const o=[];const ws=window.FM15?FM15.WHO:[],ms=window.FM15?FM15.
  o.push(sec('Portraits (character x mood)'));const g=h('div',{cls:'grid'});for(const w of ws)for(const m of ms)g.append(h('figure',{},h('img',{loading:'lazy',src:'assets/portraits/'+w+'_'+m+'.webp?v=18',alt:w+' '+m}),h('figcaption',{textContent:w+' · '+m})));o.push([g]);
  o.push(sec('Sprites (front, side, back, side + spacesuit)'));const looks=[['You',PLOOK],...NPCS.map(n=>[n.n,n.look]),['Child',kidLook]];const sg=h('div',{cls:'grid'});
  for(const[nm,L]of looks){const c=h('canvas',{width:8*20,height:30});const x=c.getContext('2d');x.imageSmoothingEnabled=false;[2,1,0,3].forEach((d,i)=>{for(const s of[0,1])x.drawImage(charSprite(L,d,(tick>>3)&3,!!s,0),(i+s*4)*20,1)});c.style.width=(8*20*3)+'px';c.style.height='90px';sg.append(h('figure',{},c,h('figcaption',{textContent:nm})))}o.push([sg]);
- o.push(sec('Event art'));const cg=h('div',{cls:'cg'});for(const k in CGT)cg.append(h('div',{},h('b',{textContent:CGT[k]}),h('img',{loading:'lazy',src:'assets/cg/'+k+'.webp?v=20'})));o.push([cg]);return o}
+ o.push(sec('Event art'));const cg=h('div',{cls:'cg'});for(const k in CGT)cg.append(h('div',{},h('b',{textContent:CGT[k]}),h('img',{loading:'lazy',src:'assets/cg/'+k+'.webp?v=21'})));o.push([cg]);return o}
 let filt='';
 function give(){const o=[sec('Money',...[1000,10000,100000].map(v=>B('+'+v+'cr',()=>{G.money+=v})),B('Stardust +50',()=>{G.dust=(G.dust||0)+50}))];
  o.push(sec('Unlock',B('Max all skills',()=>{for(const k in G.xp)G.xp[k]=2000}),B('Complete all side quests',()=>{G.sq=G.sq||{};for(const q of SQ)G.sq[q.id]='done'}),B('Fill museum',()=>{G.muse=G.muse||{};for(const i of FM10.MALL)G.muse[i]=1}),B('All achievements',()=>{for(const a of ACH)G.ach[a[0]]=G.day}),

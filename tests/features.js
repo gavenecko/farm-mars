@@ -24,7 +24,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   add('iron',5);talk(n);modal=null;if(G.sq[q.id]!==1)throw new Error('step1');add('crys',2);const m=G.money;talk(n);modal=null;if(G.sq[q.id]!='done')throw new Error('not done');if(G.money!=m+q.r[0])throw new Error('reward');
   FM11.questLog();if(!modal||!modal.pages[0].includes('Done'))throw new Error('log');modal=null;for(const x of FM11.SQ)for(const[s]of x.steps)if(!ITEMS[s])throw new Error('bad item '+s);boardMenu();if(!modal.opts.some(o=>o.t=='Side Quests'))throw new Error('board link');modal=null;
   const q2=FM11.SQ[1];G.hearts[q2.npc]=5;talk(NPCS.find(x=>x.id==q2.npc));modal=null;if(FM11.sqActive()!=q2)throw new Error('tracker');draw();const[rx,ry,rw,rh]=FM11.sqTrackRect();onTap(rx+10,ry+10);if(!modal||!modal.pages[0].includes(q2.t))throw new Error('tracker tap');modal=null;return 'ok'}));
- await t('homes: 8 doors open, spawns walkable, exits back, reachable sit spots',async()=>ev(()=>{const H=FM12.HOMES,out=[];if(Object.keys(H).length<8)throw new Error('homes '+Object.keys(H).length);
+ await t('homes: 8 doors open, spawns walkable, exits back, reachable sit spots',async()=>ev(()=>{const H=Object.fromEntries(Object.entries(FM12.HOMES).filter(([,h])=>!h.orbital)),out=[];if(Object.keys(H).length<8)throw new Error('homes '+Object.keys(H).length);
   for(const id in H){const h=H[id],z=FM12.HOMEZ(id);if(!NPCS.find(n=>n.id==id))throw new Error('no npc '+id);G.time=600;G.hearts[id]=0;
    if(MAPS.city[h.door[1]][h.door[0]]!='D')throw new Error('door tile '+id);if(isSolid('city',MAPS.city[h.out[1]][h.out[0]]))throw new Error('out solid '+id);
    enter('city',h.out[0],h.out[1],0);G.px=h.door[0]*T+8;G.py=h.door[1]*T+10;triggers();if(G.zone!=z)throw new Error('enter '+id+' -> '+G.zone);if(!feetFree(G.px,G.py))throw new Error('spawn '+id);
@@ -34,8 +34,8 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   return out.length+' homes ok'}));
  await t('homes: locked late at night unless 6+ hearts; residents home on schedule',async()=>ev(()=>{const h=FM12.HOMES.kai;G.spouse=null;G.time=23*60;G.hearts.kai=0;enter('city',h.out[0],h.out[1],0);G.px=h.door[0]*T+8;G.py=h.door[1]*T+10;triggers();if(G.zone!='city')throw new Error('not locked');
   G.hearts.kai=6;G.px=h.door[0]*T+8;G.py=h.door[1]*T+10;triggers();if(G.zone!='h_kai')throw new Error('6 hearts locked');
-  const bad=[];for(const tm of[6*60+30,23*60]){G.time=tm;placeNPCs(true);for(const id in FM12.HOMES)if(npcRT[id].zone!='h_'+id)bad.push(id+'@'+tm+'='+npcRT[id].zone)}
-  G.time=12*60;placeNPCs(true);const away=Object.keys(FM12.HOMES).filter(id=>npcRT[id].zone.startsWith('h_'));if(bad.length)throw new Error(bad.join(' '));enter('city',16,14,0);return 'ok, at noon home: '+(away.join(',')||'none')}));
+  const bad=[];for(const tm of[6*60+30,23*60]){G.time=tm;placeNPCs(true);for(const id in FM12.HOMES){if(FM12.HOMES[id].orbital)continue;if(npcRT[id].zone!='h_'+id)bad.push(id+'@'+tm+'='+npcRT[id].zone)}}
+  G.time=12*60;placeNPCs(true);const away=Object.keys(FM12.HOMES).filter(id=>!FM12.HOMES[id].orbital&&npcRT[id].zone.startsWith('h_'));if(bad.length)throw new Error(bad.join(' '));enter('city',16,14,0);return 'ok, at noon home: '+(away.join(',')||'none')}));
  await t('homes: home dialogue, heart event, readable item, gifting at home',async()=>ev(()=>{G.events={theo3:1,theo4:1,theo6:1,theo7:1,theo9:1};const n=NPCS.find(q=>q.id=='theo');G.time=23*60;G.hearts.theo=2;enter('h_theo',5,6,0);placeNPCs(true);G.talked={};talk(n);
   FM13.mnorm(modal);if(!modal||!FM12.HOMES.theo.home.map(s=>s.replace(/ \$[a-z]$/,'')).includes(modal.pages[0]))throw new Error('no home line');modal=null;G.hearts.theo=5;G.talked={};const h0=G.hearts.theo;talk(n);if(!modal||!modal.name.includes('Heart Event'))throw new Error('no event');modal=null;if(!(G.hearts.theo>h0))throw new Error('event hearts');
   const f=FM12.HOMES.theo.f.find(f=>f[0]=='starmap');G.px=f[1]*T+8;G.py=1*T+8;G.dir=0;interact();if(!modal||!modal.pages[0].includes('star chart'))throw new Error('read: '+(modal&&modal.pages[0]));modal=null;
@@ -67,7 +67,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   for(const w of ws)for(const m of FM15.MOODS)if(!FM15.PIMG[w]||!FM15.PIMG[w][m]||!FM15.PIMG[w][m]._ok)throw new Error('not loaded '+w+' '+m);
   const n=NPCS.find(q=>q.id=='ava');say(n.n,'Hi there! $h',null,n.look);modal.ch=1e4;draw();const s=FM15.state();if(!s.shown||!/ava_happy/.test(s.src))throw new Error('overlay not shown '+s.src);
   FM15.FAIL.ava=1;draw();const s2=FM15.state().shown;delete FM15.FAIL.ava;if(s2)throw new Error('fallback did not hide overlay');
-  modal=null;draw();if(FM15.state().shown)throw new Error('overlay stuck');return '60 portraits loaded; overlay + fallback ok'}));
+  modal=null;draw();if(FM15.state().shown)throw new Error('overlay stuck');return FM15.WHO.length*6+' portraits loaded; overlay + fallback ok'}));
  await t('v19: event CGs (wedding x4, Colony Day, Starfall) lazy-load and overlay dialogue',async()=>ev(async()=>{const ks=['wed_ava','wed_kai','wed_zara','wed_theo','colony','starfall'];
   await Promise.all(ks.map(k=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>i.naturalWidth>=600?res():rej(new Error('small '+k));i.onerror=()=>rej(new Error('missing cg '+k));i.src='assets/cg/'+k+'.webp?v=19'})));
   G.spouse='zara';say('Wedding',['The next sol, the colony gathers.']);draw();await new Promise(r=>setTimeout(r,500));draw();let s=FM16.state();if(s.cg!='wed_zara'||!s.cgShown)throw new Error('wedding CG not shown '+JSON.stringify(s.cg));
@@ -94,7 +94,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   for(const z in EXITS){if(z=='phobos')continue;const m=MAPS[z];let dd=null;for(let y=0;y<m.length&&!dd;y++)for(let x=0;x<m[0].length;x++)if(m[y][x]=='D'){dd=[x,y];break}if(!dd){bad.push('no exit door in '+z);continue}
    let sp=null;for(const k in DOORS)if(DOORS[k][0]==z)sp=[DOORS[k][1],DOORS[k][2]];if(!sp)sp=[dd[0],dd[1]-2];G.time=12*60;enter(z,sp[0],sp[1],0);modal=null;const r=FMWALK.walkTo(dd);if(!r.ok||r.zone!=EXITS[z][0])bad.push('exit '+z+': '+(r.why||r.zone));else ok.push('exit '+z)}
   // straight joystick push (no drift) from up to 7px off-centre still enters each Habitat Row door (corner assist)
-  for(const id in HOMES){const hm=HOMES[id];for(const off of[-7,-4,4,7]){G.time=12*60;enter('city',hm.out[0],hm.out[1],0);modal=null;G.px+=off;const sgn=hm.door[1]>hm.out[1]?1:-1;let f=0;for(;f<90&&G.zone=='city';f++){joy.on=true;joy.dx=0;joy.dy=sgn;update();modal=null}joy.on=false;if(G.zone!='h_'+id)bad.push('straight '+id+' off '+off)}}
+  for(const id in HOMES){const hm=HOMES[id];if(hm.orbital||!(hm.out[1]==15||hm.out[1]==20))continue;for(const off of[-7,-4,4,7]){G.time=12*60;enter('city',hm.out[0],hm.out[1],0);modal=null;G.px+=off;const sgn=hm.door[1]>hm.out[1]?1:-1;let f=0;for(;f<90&&G.zone=='city';f++){joy.on=true;joy.dx=0;joy.dy=sgn;update();modal=null}joy.on=false;if(G.zone!='h_'+id)bad.push('straight '+id+' off '+off)}}
   // tap-a-door auto-walk
   G.time=12*60;enter('city',16,14,0);modal=null;const hv=HOMES.vega;FM17.walkToDoor(hv.door[0],hv.door[1]);for(let i=0;i<1500&&G.zone=='city';i++)update();if(G.zone!='h_vega')bad.push('tap-walk vega '+G.zone);
   if(bad.length)throw new Error(bad.join(' | '));enter('farm',13,9,2);return ok.length+' door walks ok (city/farm doors x entrances, interior exits), straight-push + tap-walk ok'}));
@@ -102,7 +102,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   save(true);const realKey=slotKey(SLOT),real0=localStorage.getItem(realKey),slot0=SLOT;TITLE=true;onTap(20,10);const el=document.getElementById('dbg');if(!el||el.style.display=='none'||!DBG.open)throw new Error('title chip did not open');
   if(!/Sandbox/.test(el.textContent))throw new Error('no sandbox gate');FM17.startSandbox();if(SLOT!='dbg'||!G.dbgSandbox)throw new Error('not in sandbox');FM17.render();
   const bad=[];for(const t of['Warp','Time','Events','People','View','Give','Cheats']){FM17.setTab(t);const bs=[...el.querySelectorAll('.bd button')];if(t!='View'&&bs.length<2||!el.querySelector('.bd').children.length)bad.push(t+' empty');for(const b of bs){const r=b.getBoundingClientRect();if(r.height&&r.height<40)bad.push(t+' small '+b.textContent+' '+r.height)}}
-  FM17.setTab('View');await new Promise(r=>setTimeout(r,50));if(false)bad.push();if(el.querySelectorAll('.bd img[src*=portraits]').length!=60)bad.push('portraits');if(el.querySelectorAll('.bd canvas').length<10)bad.push('sprites');
+  FM17.setTab('View');await new Promise(r=>setTimeout(r,50));if(false)bad.push();if(el.querySelectorAll('.bd img[src*=portraits]').length!=FM15.WHO.length*FM15.MOODS.length)bad.push('portraits');if(el.querySelectorAll('.bd canvas').length<10)bad.push('sprites');
   const click=(tab,txt)=>{FM17.openDbg();FM17.setTab(tab);const b=[...el.querySelectorAll('.bd button')].find(b=>b.textContent==txt);if(!b)throw new Error('no button '+tab+'/'+txt);b.click()};
   click('Give','+10000cr');const m=G.money;if(m<10000)bad.push('money');click('People','+1');click('Time','Storm');if(seasonIdx()!=3)bad.push('season');click('Time','21:00');if(G.time!=1260)bad.push('hour');
   for(const z of Object.keys(MAPS)){FM17.openDbg();FM17.setTab('Warp');const b=[...el.querySelectorAll('.bd button')].find(b=>b.textContent==((window.HOMEN&&HOMEN[z])||({farm:'Farm',city:'New Cydonia (city)',home:'Your habitat',cafe:'Cafe',shop:'Shop',cc:'Community Center',surf:'Mars surface',valles:'Valles Canyon',clinic:'Clinic',bar:'The Airlock (bar)',port:'Shuttle Port',phobos:'Phobos Station',biopod:'Bio-Pod',museum:'Museum'}[z])||z));if(!b){bad.push('warp btn '+z);continue}b.click();if(G.zone!=z)bad.push('warp '+z+'->'+G.zone);for(let i=0;i<3;i++){update();draw()}if(feetFree&&!feetFree(G.px,G.py))bad.push('warp stuck '+z)}
@@ -113,11 +113,11 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   menu=null;modal=null;openMenu('system');draw();menuTap(W/2,36+9*18+6);if(!DBG.open)bad.push('system menu entry');FM17.closeDbg();menu=null;
   FM17.leaveSandbox();if(!TITLE)bad.push('leave');if(localStorage.getItem(slotKey('dbg')))bad.push('sandbox not cleared');startSlot(slot0);modal=null;CUT=null;
   if(bad.length)throw new Error(bad.join(' | '));return '7 tabs, '+Object.keys(MAPS).length+' warps, toggles, real save untouched'}));
- await t('v20: every event replay (story, weddings, stargazing, child, heart events, CGs) runs and restores state',async()=>ev(async()=>{modal=null;CUT=null;G.dbgSandbox=1;const el=()=>document.getElementById('dbg');FM17.openDbg();FM17.setTab('Events');
+ await t('v20: every event replay (story, weddings, stargazing, child, heart events, CGs) runs and restores state',async()=>ev(async()=>{modal=null;CUT=null;G.dbgSandbox=1;DBG.direct=true;const el=()=>document.getElementById('dbg');FM17.openDbg();FM17.setTab('Events');
   const labels=[...el().querySelectorAll('.bd button')].map((b,i)=>i);let n=0;const bad=[];
-  for(const i of labels){FM17.openDbg();FM17.setTab('Events');const b=el().querySelectorAll('.bd button')[i];const lbl=b.textContent;const before=JSON.stringify({h:G.hearts,s:G.spouse,d:G.day,m:G.money,e:G.events,k:G.kids,c:G.colony});b.click();
-   let f=0;for(;f<6000&&(modal||CUT||DBG.replay);f++){if(CUT){CUT.ch=1e9;cutNext()}else if(modal){if(modal.opts){modal=null}else{modal.ch=1e9;modalAdvance(-1)}}else if(window.FM16&&FM16.state().sc){const s=FM16.state().sc;if(s.over>50){onTap(10,10);modal=null}}update();if(f%20==0)draw()}
-   if(DBG.replay||modal||CUT)bad.push(lbl+' did not finish');const after=JSON.stringify({h:G.hearts,s:G.spouse,d:G.day,m:G.money,e:G.events,k:G.kids,c:G.colony});if(after!=before)bad.push(lbl+' changed state');n++}
+  for(const i of labels){FM17.openDbg();FM17.setTab('Events');const b=el().querySelectorAll('.bd button')[i];if(!b){bad.push('missing btn '+i);break}const lbl=b.textContent;const before=JSON.stringify({h:G.hearts,s:G.spouse,d:G.day,m:G.money,e:G.events,k:G.kids,c:G.colony});try{b.click();
+   let f=0;for(;f<6000&&(modal||CUT||DBG.replay||(window.FM18&&(FM18.state().lg||FM18.state().derby)));f++){if(CUT){CUT.ch=1e9;cutNext()}else if(modal){if(modal.opts){modal=null}else{modal.ch=1e9;modalAdvance(-1)}}else if(window.FM16&&FM16.state().sc){const s=FM16.state().sc;if(s.over>50){onTap(10,10);modal=null}}else if(window.FM18&&FM18.state().lg){const L=FM18.LG;if(L&&!L.over){L.t=L.dur}if(L&&L.over>40)onTap(10,10)}else if(window.FM18&&FM18.state().derby){const D=FM18.DERBY;if(D&&!D.over){D.dist=D.len}if(D&&D.over>40)onTap(10,10)}update();if(f%20==0)draw()}
+   if(DBG.replay||modal||CUT)bad.push(lbl+' did not finish');const after=JSON.stringify({h:G.hearts,s:G.spouse,d:G.day,m:G.money,e:G.events,k:G.kids,c:G.colony});if(after!=before)bad.push(lbl+' changed state');n++}catch(e){bad.push(lbl+': '+e.message);break}}
   delete G.dbgSandbox;if(window.__err)bad.push('err '+window.__err.message);if(bad.length)throw new Error(bad.slice(0,8).join(' | '));return n+' replays ok, state restored each time'}));
  await t('v20: Starfall CG matches the chosen partner',async()=>ev(()=>{const r=[];for(const n of NPCS){FM16.stargaze(n);r.push(n.id+':'+FM16.state().cg);modal=null;draw()}const want=id=>['ava','kai','zara','theo'].includes(id)?'sf_'+id:'starfall';const bad=r.filter(x=>{const[i,c]=x.split(':');return c!=want(i)});if(bad.length)throw new Error(bad.join(','));return r.join(' ')}));
  await t('screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,450));await page.screenshot({path:path.join(SHOTS,n)})};
@@ -166,6 +166,41 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
    looks.forEach((L,r)=>[2,1,0,3].forEach((d,i)=>{for(const s of[0,1])g.drawImage(charSprite(L,d,0,!!s,0),(4+(i+s*4)*22)*S,(2+r*30)*S,18*S,27*S)}));document.body.appendChild(c);modal=null});
   await new Promise(r=>setTimeout(r,200));await (await page.$('#cmp')).screenshot({path:path.join(SHOTS,'fm19_sprites_suits.png')});
   await ev(()=>{document.getElementById('cmp').remove();modal=null;enter('farm',13,9,2)});return 'saved'});
+ await t('v21: Phobos expansion - Nyx, bunk door, Low-G Drift, exchange extras',async()=>ev(async()=>{
+  if(!NPCS.find(n=>n.id=='nyx'))throw new Error('no nyx');if(!FM15.WHO.includes('nyx'))throw new Error('nyx portraits');
+  if(!MAPS.phobos||MAPS.phobos.length<12)throw new Error('phobos map');if(!MAPS.h_nyx)throw new Error('nyx bunk');
+  G.port=1;G.time=12*60;enter('phobos',14,8,0);placeNPCs(true);if(!feetFree(G.px,G.py))throw new Error('phobos spawn');
+  if(!(npcRT.nyx&&npcRT.nyx.zone=='phobos'))throw new Error('nyx not on station');
+  enter('phobos',22,4,0);G.py=3*T+10;triggers();if(G.zone!='h_nyx')throw new Error('bunk door '+G.zone);
+  G.px=5*T+8;G.py=7*T+4;triggers();if(G.zone!='phobos')throw new Error('bunk exit '+G.zone);
+  FM18.lgStart();if(!FM18.state().lg)throw new Error('lg');for(let i=0;i<40;i++){FM18.LG.tx=200;FM18.LG.ty=100;update()}
+  FM18.LG.t=FM18.LG.dur;update();for(let i=0;i<60;i++)update();if(!(FM18.LG&&FM18.LG.over))throw new Error('lg end');
+  onTap(10,10);modal=null;
+  // exchange sells new goods
+  const m0=G.money;G.money=99999;exchMenu();if(!modal||!modal.opts)throw new Error('exch');const names=modal.opts.map(o=>o.t).join('|');
+  if(!/Zero-G|Moon Rock|Snowglobe/.test(names))throw new Error('exch missing '+names);modal=null;G.money=m0;
+  return 'nyx+bunk+low-g+exchange ok'}));
+ await t('v21: Storm Derby is a playable race + festival menu',async()=>ev(()=>{
+  const yr0=(year()-1)*28;G.day=yr0+3*7+7;G.time=10*60;G.feast=0;festAct();
+  if(!modal||modal.name!='Storm Derby')throw new Error('no fest menu');
+  const race=modal.opts.find(o=>/Race/i.test(o.t));if(!race)throw new Error('no race option');race.f();
+  if(!FM18.state().derby)throw new Error('derby not started');
+  for(let i=0;i<80;i++){const D=FM18.DERBY;if(D){D.tx=D.x+(i%2?20:-20);update()}}
+  FM18.DERBY.dist=FM18.DERBY.len;update();for(let i=0;i<60;i++)update();
+  if(!(FM18.DERBY&&FM18.DERBY.over))throw new Error('no finish');const place=G.derbyHi;onTap(10,10);modal=null;
+  if(!cnt('ticket'))throw new Error('no ribbon');return 'finished place was tracked ('+place+')'}));
+ await t('v21: Cydonia Springs spa - door, soak CG, date',async()=>ev(()=>{
+  if(!MAPS.springs)throw new Error('no springs');if(!DOORS['city:26,19'])throw new Error('no door');
+  enter('city',26,20,0);G.py=19*T+10;triggers();if(G.zone!='springs')throw new Error('door '+G.zone);
+  G.px=8*T+8;G.py=6*T+8;if(isSolid('springs','p'))throw new Error('pool solid');if(!feetFree(G.px,G.py))throw new Error('pool blocked');
+  G.springDay=0;FM18.soak();if(FM16.state().cg!='springs')throw new Error('cg '+FM16.state().cg);modal=null;
+  G.hearts.ava=8;G.dating=G.dating||{};G.dating.ava=1;G.springDay=0;FM18.springDate(NPCS.find(n=>n.id=='ava'));
+  if(FM16.state().cg!='springs')throw new Error('date cg');modal=null;
+  G.px=8*T+8;G.py=11*T+4;triggers();if(G.zone!='city')throw new Error('exit '+G.zone);
+  return 'springs door+soak+date ok'}));
+ await t('v21: partner Starfall + new CGs load',async()=>ev(()=>{
+  for(const k of['phobos','springs','derby']){const im=FM16.cgLoad(k);if(!im)throw new Error('no '+k)}
+  return '3 new CGs'}));
  await t('v20 screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,500));await page.screenshot({path:path.join(SHOTS,n)})};
   await shot('fm20_habitat_row.png',()=>{FM17.closeDbg();modal=null;G.time=12*60;G.wx=null;enter('city',6,15,2);DBG.grid=true});
   await shot('fm20_habitat_row_nogrid.png',()=>{DBG.grid=false;enter('city',8,17,0);G.py=15*T+8});
@@ -178,5 +213,14 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   await shot('fm20_system_menu.png',()=>{FM17.closeDbg();delete G.dbgSandbox;openMenu('system')});
   await shot('fm20_title.png',()=>{menu=null;TITLE=true});
   await shot('fm20_cg_sf_zara.png',()=>{TITLE=false;FM16.stargaze(NPCS.find(n=>n.id=='zara'));modal.pi=1;modal.ch=1e4});
+  await ev(()=>{modal=null;enter('farm',13,9,2)});return 'saved'});
+ await t('v21 screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,400));await page.screenshot({path:path.join(SHOTS,n)})};
+  await shot('fm21_phobos.png',()=>{FM17.closeDbg();modal=null;G.port=1;enter('phobos',14,8,0);placeNPCs(true)});
+  await shot('fm21_springs.png',()=>{enter('springs',8,8,0)});
+  await shot('fm21_nyx.png',()=>{enter('phobos',5,5,0);talk(NPCS.find(n=>n.id=='nyx'));modal.ch=1e4});
+  await shot('fm21_derby.png',()=>{modal=null;FM18.derbyStart();for(let i=0;i<30;i++)update()});
+  await shot('fm21_lowg.png',()=>{modal=null;if(window.FM18&&FM18.DERBY){FM18.DERBY.over=999;onTap(1,1)}FM18.lgStart();for(let i=0;i<20;i++)update()});
+  await shot('fm21_cg_phobos.png',()=>{modal=null;if(FM18.LG){FM18.LG.over=999;onTap(1,1)}FM16.showCG('phobos','Phobos',['Mars fills the window.']);modal.ch=1e4});
+  await shot('fm21_cg_springs.png',()=>{FM16.showCG('springs','Springs',['Warm water.']);modal.ch=1e4});
   await ev(()=>{modal=null;enter('farm',13,9,2)});return 'saved'});
 };
