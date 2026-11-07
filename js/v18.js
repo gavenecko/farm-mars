@@ -290,7 +290,7 @@ if(window.FM17){
  const _ng=newGame;newGame=function(){const g=_ng();g.hearts.nyx=g.hearts.nyx||0;return g}}
 
 // ---------- version chip ----------
-{const _d=draw;draw=function(){_d.apply(this,arguments);if(TITLE){txt('v22',W-18,H-6,'#ffb0d888',6,'right')}}}
+{const _d=draw;draw=function(){_d.apply(this,arguments);if(TITLE){txt('v23',W-18,H-6,'#ffb0d888',6,'right')}}}
 
 // Skip city-door facade for orbital homes (Nyx)
 {const _de=drawExtra;drawExtra=function(D,ox,oy,z){let door=null;if(z=='city'&&HOMES.nyx){door=HOMES.nyx.door;HOMES.nyx.door=[-99,-99]}

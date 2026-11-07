@@ -13,6 +13,10 @@ const CROPS={
  frb:{n:'Frostbloom',p:50,days:4,v:150,s:[2],c:'#9ae8ff',c2:'#3a88b0',shape:'flower'},
  cac:{n:'Ice Cactus',p:30,days:5,v:120,s:[2,3],c:'#5ad8b0',c2:'#1f7a60',shape:'cactus'},
  dst:{n:'Storm Pepper',p:30,days:3,v:75,s:[3],c:'#ff8a20',c2:'#a04a00',shape:'vine'},
+ stc:{n:'Static Bloom',p:60,days:2,v:260,s:[0,1,2,3],c:'#b8a0ff',c2:'#5a3aa0',shape:'flower',storm:1},
+ lum:{n:'Lumen Lily',p:45,days:4,re:2,v:110,s:[0,1,2,3],c:'#7affe0',c2:'#1a9a8a',shape:'flower',glow:1},
+ grd:{n:'Crater Gourd',p:40,days:5,v:140,s:[0,1,2],c:'#ff9a3a',c2:'#a0501a',shape:'melon',giant:1},
+ sun:{n:'Earth Sunflower',p:0,days:5,v:180,s:[0,1,2,3],c:'#ffd23a',c2:'#8a5a1a',shape:'flower',noshop:1},
 };
 const ITEMS={hoe:{n:'Hoe',tool:1,c:'#c96'},can:{n:'Water Can',tool:1,c:'#6cf'},pick:{n:'Pickaxe',tool:1,c:'#aab'},blade:{n:'Plasma Blade',tool:1,c:'#f4f'},
  iron:{n:'Ferrite Ore',v:25,c:'#b08870',d:'Common surface ore.'},crys:{n:'Aurorium Crystal',v:80,c:'#5ff',d:'Glows faintly blue.'},
