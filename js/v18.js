@@ -258,7 +258,7 @@ addEventListener('keyup',e=>{if(!DERBY)return;const k=e.key.toLowerCase();if(['a
 // draw a small sign on city door for springs
 {const _d=draw;draw=function(){_d.apply(this,arguments);if(!G||TITLE||LG||DERBY||G.zone!='city')return;
  const m=curMap(),mw=m[0].length*T,mh=m.length*T;let ox=Math.round(CAM.x),oy=Math.round(CAM.y);if(mw<W)ox=-(W-mw)/2;if(mh<H)oy=-(H-mh)/2;
- const X=26*T-ox,Y=19*T-oy;if(X>-20&&X<W&&Y>-20&&Y<H){R(X+2,Y-10,12,8,'#2a1a18');txt('SPA',X+8,Y-4,'#7affc8',5,'center')}}}
+ const X=26*T-ox,Y=19*T-oy;if(X>-20&&X<W&&Y>-20&&Y<H&&!modal&&!menu){R(X+2,Y-10,12,8,'#2a1a18');txt('SPA',X+8,Y-4,'#7affc8',5,'center')}}}
 
 // ---------- ACH ----------
 ACH.push(['lgdrift','Low-G Ace','Score 35+ in Low-G Drift',g=>(g.lgHi||0)>=35],
@@ -290,7 +290,7 @@ if(window.FM17){
  const _ng=newGame;newGame=function(){const g=_ng();g.hearts.nyx=g.hearts.nyx||0;return g}}
 
 // ---------- version chip ----------
-{const _d=draw;draw=function(){_d.apply(this,arguments);if(TITLE){txt('v25',W-18,H-6,'#ffb0d888',6,'right')}}}
+{const _d=draw;draw=function(){_d.apply(this,arguments);if(TITLE){txt('v26',W-18,H-6,'#ffb0d888',6,'right')}}}
 
 // Skip city-door facade for orbital homes (Nyx)
 {const _de=drawExtra;drawExtra=function(D,ox,oy,z){let door=null;if(z=='city'&&HOMES.nyx){door=HOMES.nyx.door;HOMES.nyx.door=[-99,-99]}
