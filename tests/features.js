@@ -88,7 +88,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   return 'journal ok; suit sprite with helmet ('+hel+'px)'}));
  await t('v20: every door in every map is reachable by real joystick movement from spawn + each city entrance, and enters',async()=>ev(async()=>{eval(await (await fetch('tests/walk.js?v=20')).text());
   modal=null;CUT=null;menu=null;for(const n of NPCS)G.hearts[n.id]=G.hearts[n.id]||0;if(!G.pod){G.pod=1;G.blobs=[{c:'#7affc8'}];applyLayout()}const bad=[],ok=[];
-  const starts={city:[[16,14],[1,10],[15,22],[16,30]],farm:[[13,9]]};
+  const starts={city:[[16,14],[1,10],[15,22],[16,30]],farm:[[13,9]],surf:[[31,41]]};
   for(const k in DOORS){const[z,xy]=k.split(':'),[x,y]=xy.split(',').map(Number);for(const st of starts[z]||[[2,2]]){G.time=DOORS[k][0]=='bar'?19*60:12*60;enter(z,st[0],st[1],0);modal=null;const r=FMWALK.walkTo([x,y]);if(!r.ok||r.zone!=DOORS[k][0])bad.push(k+' from '+st+': '+(r.why||r.zone));else ok.push(k)}}
   // every interior exit door leads back out
   for(const z in EXITS){if(z=='phobos')continue;const m=MAPS[z];let dd=null;for(let y=0;y<m.length&&!dd;y++)for(let x=0;x<m[0].length;x++)if(m[y][x]=='D'){dd=[x,y];break}if(!dd){bad.push('no exit door in '+z);continue}
@@ -201,6 +201,32 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
  await t('v21: partner Starfall + new CGs load',async()=>ev(()=>{
   for(const k of['phobos','springs','derby']){const im=FM16.cgLoad(k);if(!im)throw new Error('no '+k)}
   return '3 new CGs'}));
+ await t('v22: Old Colony - door, 6 section consoles, donate/partial/complete bundles, rewards, unlocks (greenhouse, scrap, med, forecast, rail), finale CG, tracker',async()=>ev(()=>{const F=FM19,bad=[];G.oc=null;G.gh=0;
+  enter('surf',F.OCD[0],F.OCD[1]+1,0);G.py=F.OCD[1]*T+10;triggers();if(G.zone!='oldcol')throw new Error('door '+G.zone);G.px=1*T+8;G.py=7*T+8;G.px=0*T+8;triggers();if(G.zone!='surf')bad.push('exit');
+  for(const r of F.ROOMS){enter('oldcol',r.p[0],r.p[1]+1,0);G.dir=0;modal=null;interact();if(!modal||modal.name!=r.n)bad.push('console '+r.id);modal=null}
+  if(F.OCB.length<12)bad.push('bundles '+F.OCB.length);for(const b of F.OCB)for(const k in b.in)if(k!='$'&&!ITEMS[k])bad.push('bad item '+k);
+  const b=F.OCB.find(q=>q.id=='s1');add('iron',8);F.donate(b);if(F.bDone(b)||(G.oc.b.s1.iron!=8))bad.push('partial');add('iron',12);add('cob',5);const m0=G.money;F.donate(b);modal=null;if(!F.bDone(b)||G.money!=m0+800)bad.push('complete/reward');
+  G.oc.pin='h1';draw();const[x,y,w,h]=F.trRect();onTap(x+5,y+5);if(!modal||modal.name!='Dust & Bloom Crops')bad.push('tracker tap');modal=null;
+  const en=G.maxEn;for(const q of F.OCB)if(!F.bDone(q))F.completeBundle(q,true);if(!F.ocAllDone()||!G.oc.fin)bad.push('all');if(G.maxEn!=en+25)bad.push('med');if(!G.gh||GHR[0]!=18)bad.push('greenhouse');
+  const iron=cnt('iron'),fc=F.forecastFor(G.day+1);sleep();modal=null;if(cnt('iron')<=iron)bad.push('scrap');if(G.wx!=fc)bad.push('forecast '+fc+' vs '+G.wx);if(!(G.fcast||'').includes('Tomorrow'))bad.push('fcast text');
+  enter('farm',28,14,0);G.px=28*T+8;G.py=13*T+20;interact();const o=modal&&modal.opts&&modal.opts.find(q=>/Old Colony/.test(q.t));if(!o)bad.push('rail menu');else{o.f();if(G.zone!='oldcol')bad.push('rail ride '+G.zone)}modal=null;
+  F.finale();if(FM16.state().cg!='oldcol')bad.push('finale cg');modal=null;if(!LETTERS.find(l=>l[0]=='oldcol'&&l[4]({day:3})))bad.push('letter');
+  if(bad.length)throw new Error(bad.join(' | '));return F.OCB.length+' bundles / 6 sections ok'}));
+ await t('v22: visible terraforming - surface paint per stage, forage, open-sky crops, critters, dome view, NPC lines, stage CGs',async()=>ev(()=>{const F=FM19,bad=[];
+  const px=st=>{G.terra=st;const c=bgCache('surf',MAPS.surf);const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let gr=0;for(let i=0;i<d.length;i+=16)if(d[i+1]>d[i]&&d[i+1]>d[i+2])gr++;return gr};
+  const g=[0,1,2,3].map(px);if(!(g[1]>g[0]&&g[2]>g[1]&&g[3]>g[2]))bad.push('green px '+g);
+  for(const st of[1,2,3]){G.terra=st;const E=genSurface();const k=E.filter(e=>e.k=='plant'&&['mclover','cbloom','reed'].includes(e.t)).length;if(!k)bad.push('forage st'+st)}G.terra=0;if(genSurface().some(e=>['mclover','cbloom','reed'].includes(e.t)))bad.push('forage at 0');
+  G.oplot={};G.terra=1;enter('surf',17,39,0);G.dir=0;G.inv[0]=['s_mbar',2];G.sel=0;F.plotAct(17,38);if(G.oplot['17,38'])bad.push('planted too early');
+  G.terra=2;F.plotAct(17,38);if(!G.oplot['17,38'])bad.push('plant');for(let i=0;i<4;i++){sleep();modal=null}const b=cnt('mbar');F.plotAct(17,38);if(cnt('mbar')<=b)bad.push('harvest');
+  G.terra=3;G.tfCG=2;modal=null;CUT=null;menu=null;update();if(FM16.state().cg!='tf3')bad.push('stage cg '+FM16.state().cg);modal=null;
+  const n=NPCS.find(q=>q.id=='mo');G.tfHeard={};delete G.talked['mo'+G.day];chat(n);if(!modal||!modal.pages.some(p=>p.includes('craters')))bad.push('npc line');modal=null;
+  enter('surf',20,20,0);G.time=12*60;for(let i=0;i<3;i++){update();draw()}enter('farm',13,2,0);draw();
+  if(bad.length)throw new Error(bad.join(' | '));return 'green px by stage '+g.join('<')}));
+ await t('v22: debug menu has Old Colony/terraform warps, events and unlocks',async()=>ev(()=>{const el=()=>document.getElementById('dbg');G.dbgSandbox=1;const bad=[];
+  const find=(tab,l)=>{FM17.openDbg();FM17.setTab(tab);return[...el().querySelectorAll('.bd button')].find(b=>b.textContent==l)};
+  for(const[tab,l]of[['Warp','Old Colony'],['Warp','Rail Depot'],['Events','Old Colony finale'],['Events','Terraform CG 2'],['Give','Restore Radio Tower'],['Give','Stage 2']]){const b=find(tab,l);if(!b)bad.push(tab+'/'+l);}
+  find('Warp','Old Colony').click();if(G.zone!='oldcol')bad.push('warp');find('Give','Reset Old Colony').click();find('Give','Restore Rail Depot').click();if(!G.oc.unl.rail)bad.push('unlock');FM17.closeDbg();delete G.dbgSandbox;
+  if(bad.length)throw new Error(bad.join(' | '));return 'ok'}));
  await t('v20 screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,500));await page.screenshot({path:path.join(SHOTS,n)})};
   await shot('fm20_habitat_row.png',()=>{FM17.closeDbg();modal=null;G.time=12*60;G.wx=null;enter('city',6,15,2);DBG.grid=true});
   await shot('fm20_habitat_row_nogrid.png',()=>{DBG.grid=false;enter('city',8,17,0);G.py=15*T+8});
@@ -214,6 +240,17 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   await shot('fm20_title.png',()=>{menu=null;TITLE=true});
   await shot('fm20_cg_sf_zara.png',()=>{TITLE=false;FM16.stargaze(NPCS.find(n=>n.id=='zara'));modal.pi=1;modal.ch=1e4});
   await ev(()=>{modal=null;enter('farm',13,9,2)});return 'saved'});
+ await t('v22 screenshots',async()=>{const sh=async(n,f,...a)=>{await ev(f,...a);await new Promise(r=>setTimeout(r,450));await page.screenshot({path:path.join(SHOTS,n)})};
+  await sh('fm22_oldcol_broken.png',()=>{FM17.closeDbg();modal=null;G.oc=null;G.time=12*60;enter('oldcol',13,7,0)});
+  await sh('fm22_oldcol_partial.png',()=>{for(const x of FM19.OCB.slice(0,8))FM19.completeBundle(x,true);enter('oldcol',13,7,0)});
+  await sh('fm22_bundle_ui.png',()=>{enter('oldcol',13,11,0);FM19.bundleView(FM19.OCB.find(b=>b.id=='l1'));modal.ch=999});
+  await sh('fm22_oldcol_restored.png',()=>{modal=null;for(const x of FM19.OCB)FM19.completeBundle(x,true);enter('oldcol',13,7,0)});
+  await sh('fm22_cg_oldcol.png',()=>{FM19.finale();modal.ch=1e4});
+  await sh('fm22_surface_entrance.png',()=>{modal=null;G.terra=0;G.tfCG=0;SURF=null;enter('surf',14,37,0)});
+  for(const s of[1,2,3])await sh('fm22_terra'+s+'.png',(s)=>{modal=null;G.terra=s;G.tfCG=s;SURF=null;enter('surf',22,30,0)},s);
+  await sh('fm22_farm_domeview.png',()=>{G.terra=3;enter('farm',13,2,0)});
+  await sh('fm22_cg_tf3.png',()=>{G.terra=3;G.tfCG=2;update();modal.ch=1e4});
+  await ev(()=>{modal=null;G.terra=0;G.tfCG=0;enter('farm',13,9,2)});return 'saved'});
  await t('v21 screenshots',async()=>{const shot=async(n,f)=>{await ev(f);await new Promise(r=>setTimeout(r,400));await page.screenshot({path:path.join(SHOTS,n)})};
   await shot('fm21_phobos.png',()=>{FM17.closeDbg();modal=null;G.port=1;enter('phobos',14,8,0);placeNPCs(true)});
   await shot('fm21_springs.png',()=>{enter('springs',8,8,0)});
