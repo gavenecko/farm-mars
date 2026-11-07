@@ -14,7 +14,7 @@ const CROPS={
  cac:{n:'Ice Cactus',p:30,days:5,v:120,s:[2,3],c:'#5ad8b0',c2:'#1f7a60',shape:'cactus'},
  dst:{n:'Storm Pepper',p:30,days:3,v:75,s:[3],c:'#ff8a20',c2:'#a04a00',shape:'vine'},
  stc:{n:'Static Bloom',p:60,days:2,v:260,s:[0,1,2,3],c:'#b8a0ff',c2:'#5a3aa0',shape:'flower',storm:1},
- lum:{n:'Lumen Lily',p:45,days:4,re:2,v:110,s:[0,1,2,3],c:'#7affe0',c2:'#1a9a8a',shape:'flower',glow:1},
+ lum:{n:'Lumen Lily',p:45,days:4,re:2,v:85,s:[0,1,2,3],c:'#7affe0',c2:'#1a9a8a',shape:'flower',glow:1},
  grd:{n:'Crater Gourd',p:40,days:5,v:140,s:[0,1,2],c:'#ff9a3a',c2:'#a0501a',shape:'melon',giant:1},
  sun:{n:'Earth Sunflower',p:0,days:5,v:180,s:[0,1,2,3],c:'#ffd23a',c2:'#8a5a1a',shape:'flower',noshop:1},
 };

@@ -2,7 +2,7 @@
 (()=>{
 // ---------- illustrated event CGs (lazy-loaded HTML overlay) ----------
 const CGI={},CGF={};let cgEl=null,cgCap=null,cgImg=null,CG=null;
-function cgLoad(k){if(CGI[k]||CGF[k])return CGI[k];const im=new Image();im.decoding='async';im.onload=()=>{im._ok=1};im.onerror=()=>{CGF[k]=1};im.src='assets/cg/'+k+'.webp?v=24';CGI[k]=im;return im}
+function cgLoad(k){if(CGI[k]||CGF[k])return CGI[k];const im=new Image();im.decoding='async';im.onload=()=>{im._ok=1};im.onerror=()=>{CGF[k]=1};im.src='assets/cg/'+k+'.webp?v=25';CGI[k]=im;return im}
 function cgEnsure(){if(cgEl)return;cgEl=document.createElement('div');cgEl.id='cgov';cgEl.style.cssText='position:fixed;display:none;pointer-events:none;z-index:6;overflow:hidden;background:#000;opacity:0;transition:opacity .5s';
  cgImg=document.createElement('img');cgImg.style.cssText='width:100%;height:100%;object-fit:cover;display:block';cgEl.appendChild(cgImg);
  cgCap=document.createElement('div');cgCap.style.cssText='position:absolute;left:0;right:0;bottom:0;padding:1.2% 3% 2.2%;background:linear-gradient(transparent,rgba(10,4,20,.82) 30%);color:#fff;font:600 2.6vmin/1.35 system-ui,sans-serif;text-shadow:0 1px 3px #000';cgEl.appendChild(cgCap);document.body.appendChild(cgEl)}
@@ -65,7 +65,7 @@ function drawSC(){const s=SC;panel(64,10,W-128,H-18,'#060318','#8ad0ff');
  txt('STAR CATCHER',W/2,24,'#bdf',8,'center');txt('Score '+s.sc+(s.combo>=10?'  COMBO x'+s.combo:''),72,24,'#fff',6);txt(Math.max(0,Math.ceil((s.dur-s.t)/60))+'s',W-72,24,'#ffd23a',6,'right');
  if(s.t<150&&!s.over)txt('Catch stars (gold = 3), dodge meteors!  ←/→ or tap',W/2,H/2,'#fff',6,'center');
  if(s.over){panel(W/2-80,H/2-24,160,46,'#140a1cf0','#ffd23a');txt('TIME! Score '+s.sc,W/2,H/2-8,'#ffd23a',8,'center');txt(s.msg||'',W/2,H/2+4,'#bdf',6,'center');if(s.over>40)txt('tap / ENTER to continue',W/2,H/2+15,'#aaa',5,'center')}}
-function scEnd(){SC=null;sfMenu()}
+function scEnd(){SC=null;if(window.FMEV)FMEV('starfall');sfMenu()}
 {const _u=update;update=function(){if(SC){tick++;if(typeof padPoll=='function')padPoll();scStep();return}return _u()}}
 {const _d=draw;draw=function(){_d.apply(this,arguments);if(SC&&G&&!TITLE)drawSC();else if(G&&!TITLE&&!CUT&&!SC&&isSF()&&['city','farm','surf'].includes(G.zone))meteors()}}
 {const _ot=onTap;onTap=function(x,y){if(SC){if(SC.over>40)scEnd();else if(!SC.over)SC.tx=x;return true}return _ot(x,y)}}

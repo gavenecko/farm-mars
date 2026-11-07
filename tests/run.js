@@ -14,6 +14,8 @@ function ok(c,m){if(!c)throw new Error(m)}
  if(!base){await serve();base='http://localhost:'+PORT+'/'}
  const br=await puppeteer.launch({executablePath:CHROME,headless:'new',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
  page=await br.newPage();await page.setViewport({width:915,height:412,isMobile:true,hasTouch:true,isLandscape:true,deviceScaleFactor:2});
+ // deterministic randomness: seeded PRNG replaces Math.random in the page (SEED env to vary)
+ await page.evaluateOnNewDocument(seed=>{let a=seed>>>0;Math.random=function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}},+(process.env.SEED||12345));
  page.on('pageerror',e=>errors.push('pageerror: '+e.message));page.on('console',m=>{if(m.type()=='error')errors.push('console: '+m.text())});
  page.on('requestfailed',r=>errors.push('reqfail: '+r.url()));
  await t('boot + title screen',async()=>{await page.goto(base,{waitUntil:'networkidle0'});await new Promise(r=>setTimeout(r,800));ok(await ev(()=>FM.TITLE===true),'title not shown');await page.screenshot({path:path.join(SHOTS,'title.png')})});

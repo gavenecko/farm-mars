@@ -157,7 +157,7 @@ function drawDerby(){const d=DERBY;panel(48,6,W-96,H-12,'#1a0a08','#ff8a3a');
  txt('STORM DERBY',W/2,20,'#ffd27a',8,'center');txt('#'+d.place,72,20,'#fff',7);txt(Math.min(100,Math.floor(d.dist/d.len*100))+'%',W-72,20,'#ff8a3a',7,'right');
  if(d.t<100&&!d.over)txt('Steer ←/→ or tap  ·  hit green BOOST pads',W/2,H/2,'#fff',6,'center');
  if(d.over){panel(W/2-90,H/2-28,180,54,'#140808f0','#ffd23a');txt(d.place==1?'YOU WIN!':'FINISH #'+d.place,W/2,H/2-10,'#ffd23a',9,'center');txt(d.msg||'',W/2,H/2+6,'#fff',7,'center');if(d.over>40)txt('tap to continue',W/2,H/2+20,'#aaa',6,'center')}}
-function derbyEnd(){const p=G.derbyHi;DERBY=null;const pg=[p==1?'You take first place! The crowd (and Pip) go wild.':'You finish the dusty track. Ribbons and cheers all around.','A Derby Ribbon is pinned to your jacket.'];if(window.FM16)FM16.showCG('derby','Storm Derby',pg);else say('Storm Derby',pg)}
+function derbyEnd(){const p=G.derbyHi;if(window.FMEV)FMEV('derby',p);DERBY=null;const pg=[p==1?'You take first place! The crowd (and Pip) go wild.':'You finish the dusty track. Ribbons and cheers all around.','A Derby Ribbon is pinned to your jacket.'];if(window.FM16)FM16.showCG('derby','Storm Derby',pg);else say('Storm Derby',pg)}
 
 // ---------- override Storm Derby festival ----------
 {const _fa=festAct;festAct=function(){const s=seasonIdx();if(s!=3)return _fa();G.fests=G.fests||{};G.fests[s]=1;G.feast=G.day;
@@ -290,7 +290,7 @@ if(window.FM17){
  const _ng=newGame;newGame=function(){const g=_ng();g.hearts.nyx=g.hearts.nyx||0;return g}}
 
 // ---------- version chip ----------
-{const _d=draw;draw=function(){_d.apply(this,arguments);if(TITLE){txt('v24',W-18,H-6,'#ffb0d888',6,'right')}}}
+{const _d=draw;draw=function(){_d.apply(this,arguments);if(TITLE){txt('v25',W-18,H-6,'#ffb0d888',6,'right')}}}
 
 // Skip city-door facade for orbital homes (Nyx)
 {const _de=drawExtra;drawExtra=function(D,ox,oy,z){let door=null;if(z=='city'&&HOMES.nyx){door=HOMES.nyx.door;HOMES.nyx.door=[-99,-99]}
