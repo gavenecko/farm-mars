@@ -88,7 +88,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   return 'journal ok; suit sprite with helmet ('+hel+'px)'}));
  await t('v20: every door in every map is reachable by real joystick movement from spawn + each city entrance, and enters',async()=>ev(async()=>{eval(await (await fetch('tests/walk.js?v=20')).text());
   modal=null;CUT=null;menu=null;for(const n of NPCS)G.hearts[n.id]=G.hearts[n.id]||0;if(!G.pod){G.pod=1;G.blobs=[{c:'#7affc8'}];applyLayout()}const bad=[],ok=[];
-  const starts={city:[[16,14],[1,10],[15,22],[16,30]],farm:[[13,9]],surf:[[31,41]]};
+  const starts={city:[[16,14],[1,10],[15,22],[16,30]],farm:[[13,9]],surf:[[31,41]],valles:[[2,17]]};G.gly=Object.assign(G.gly||{},{open:1});
   for(const k in DOORS){const[z,xy]=k.split(':'),[x,y]=xy.split(',').map(Number);for(const st of starts[z]||[[2,2]]){G.time=DOORS[k][0]=='bar'?19*60:12*60;enter(z,st[0],st[1],0);modal=null;const r=FMWALK.walkTo([x,y]);if(!r.ok||r.zone!=DOORS[k][0])bad.push(k+' from '+st+': '+(r.why||r.zone));else ok.push(k)}}
   // every interior exit door leads back out
   for(const z in EXITS){if(z=='phobos')continue;const m=MAPS[z];let dd=null;for(let y=0;y<m.length&&!dd;y++)for(let x=0;x<m[0].length;x++)if(m[y][x]=='D'){dd=[x,y];break}if(!dd){bad.push('no exit door in '+z);continue}
@@ -268,7 +268,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   G.tiles={};G.giant={};F.plantGrid('grd',true);if(F.formGiants(true)!=1)bad.push('giant form');enter('farm',19,16,0);if(!solidAt(19*T+8,13*T+8))bad.push('giant solid');G.py=15*T+8;G.dir=0;G.energy=100;const g0=cnt('grd');act();if(cnt('grd')-g0!=15||Object.keys(G.giant).length)bad.push('giant harvest');
   G.tiles={};F.plantGrid('grd',true,2,3);if(F.formGiants(true))bad.push('2x3 went giant');
   if(bad.length)throw new Error(bad.join(' | '));return 'lum lights '+n}));
- await t('v23: wildlife - dust fox befriended over 3 sols with CG, follows you home; ore-sniffer befriended with ore, sniffs out ore',async()=>ev(()=>{const F=FM20,bad=[];G.fox=null;G.sniff=null;F.resetRT();G.time=12*60;
+ await t('v23: wildlife - dust fox befriended over 3 sols with CG, follows you home; ore-sniffer befriended with ore, sniffs out ore',async()=>ev(()=>{const F=FM20,bad=[];G.fox=null;G.sniff=null;F.resetRT();G.inv=G.inv.map((s,i)=>i<4?s:null);G.time=12*60;
   enter('surf',F.FOXH[0]-1,F.FOXH[1],1);const p=F.foxRT();if(!p)throw new Error('no wild fox');G.px=p.x-14;G.py=p.y;G.dir=1;
   for(let d=0;d<3;d++){add('pot',2);G.sel=G.inv.findIndex(s=>s&&s[0]=='pot');modal=null;F.foxAct();if(d<2)F.foxAct();G.day++}if(!G.fox.ad||G.fox.fed!=3)bad.push('fox befriend '+G.fox.fed);if(FM16.state().cg!='fox')bad.push('fox cg');modal=null;
   enter('farm',13,9,2);for(let i=0;i<120;i++)update();let fp=F.foxRT();if(!fp||fp.z!='farm'||Math.hypot(fp.x-G.px,fp.y-G.py)>40)bad.push('fox follow farm');
@@ -283,6 +283,65 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   for(const[tab,l]of[['Warp','Dust fox'],['Warp','Ore-sniffer'],['Warp','Routine: Cafe lunch'],['Events','Earth letter 1'],['Events','Earth letter 5'],['Events','Giant crop'],['Events','NPC storm'],['Give','Weird seeds'],['Give','Adopt dust fox'],['Give','Force dust storm']]){if(!find(tab,l))bad.push(tab+'/'+l)}
   find('Give','Adopt dust fox').click();if(!G.fox||!G.fox.ad)bad.push('adopt');find('Warp','Ore-sniffer').click();if(G.zone!='mine')bad.push('warp mine');FM17.closeDbg();delete G.dbgSandbox;
   if(bad.length)throw new Error(bad.join(' | '));return 'ok'}));
+ await t('v24: cosmetics - hats on sprite+portrait, dyes, tailoring machine sew/extract/wardrobe, wallpaper & flooring, festival/fishing rewards',async()=>ev(()=>{const F=FM21,bad=[];G.cos=null;G.money=99999;G.inv=G.inv.map((s,i)=>i<4?s:null);G.time=12*60;
+  const before=charSprite(PLOOK,2,0,false,false).toDataURL();F.gain('hats','straw');F.wear('straw');if(PLOOK.hat!='straw'||G.look.hat!='straw')bad.push('wear');const after=charSprite(PLOOK,2,0,false,false).toDataURL();if(before==after)bad.push('sprite unchanged');
+  if(typeof bust3=='function'){const a=bust3(Object.assign({},PLOOK,{hat:null}),'',0,0,'you').toDataURL(),b=bust3(PLOOK,'',0,0,'you').toDataURL();if(a==b)bad.push('portrait unchanged')}
+  shopMenu();const cat=modal.opts.find(q=>/Home Catalog/.test(q.t));if(!cat)bad.push('catalog');cat.f();const lm=modal.opts.find(q=>/Tailoring Machine/.test(q.t));lm.f();if(!G.cos.loom)bad.push('buy loom');modal=null;
+  enter('home',10,3,0);G.dir=0;interact();if(!modal||modal.name!='Tailoring Machine')bad.push('loom interact');modal=null;
+  add('wht',5);F.sewMenu();modal.opts.find(q=>/Straw/.test(q.t))||0;G.cos.hats={};F.sewMenu();const so=modal.opts.find(q=>/Straw/.test(q.t));so.f();if(!G.cos.hats.straw||cnt('wht')!=0&&cnt('wht')>=5)bad.push('sew');modal=null;
+  add('tom',1);G.sel=G.inv.findIndex(s=>s&&s[0]=='tom');F.extractDye();if(!G.cos.dyes.crimson)bad.push('extract');modal=null;F.dye('top','crimson');F.dye('pants','crimson');if(PLOOK.top!='#c03040'||G.look.pants!='#c03040')bad.push('dye');
+  const t0=tileImg('home','w',1).toDataURL();F.gain('walls','stars');F.setRoom('wall','stars');F.gain('floors','wood');F.setRoom('floor','wood');if(tileImg('home','w',1).toDataURL()==t0)bad.push('wallpaper');if(G.cos.floor!='wood')bad.push('floor');
+  G.cos.hats={};G.derbyHi=2;G.dust=3;G.colony={1:1};F.festRewards();if(!G.cos.hats.goggles)bad.push('derby hat');if(!G.cos.hats.crown)bad.push('starfall hat');if(!G.cos.hats.party)bad.push('colony hat');
+  G.stats.fish=9;FISHING={k:'koi'};fishWin();if(!G.cos.hats.angler||!G.cos.walls.ocean)bad.push('fish rewards');
+  F.wear(null);if(PLOOK.hat)bad.push('unwear');
+  if(bad.length)throw new Error(bad.join(' | '));return Object.keys(F.HATS).length+' hats, '+Object.keys(F.DYES).length+' dyes, '+(Object.keys(F.WALLS).length-1)+' wallpapers, '+(Object.keys(F.FLOORS).length-1)+' floors'}));
+ await t('v24: glyph mystery - 7 glyphs in mine/canyon/Phobos/Old Colony, journal decoding, sealed canyon door opens',async()=>ev(()=>{const F=FM21,bad=[];G.gly=null;G.time=12*60;G.inv=G.inv.map((s,i)=>i<4?s:null);
+  for(const g of F.GLY){if(g.z=='mine')enterMine(g.fl);else enter(g.z,g.x,g.y,0);modal=null;const p=F.glyPos(g);if(!p){bad.push('no pos '+g.id);continue}if(G.zone!='mine'&&isSolid(g.z,MAPS[g.z][p[1]][p[0]]))bad.push('solid '+g.id);G.px=p[0]*T+8;G.py=p[1]*T+18;if(solidAt(G.px,G.py)){G.py=p[1]*T+8}interact();modal=null;if(!G.gly.f[g.id])bad.push('find '+g.id)}
+  if(!cnt('gjour'))bad.push('journal item');enter('valles',F.RD[0],F.RD[1]+2,0);G.py=F.RD[1]*T+10;triggers();if(G.zone!='valles')bad.push('door not sealed');modal=null;
+  G.inv[0]=['gjour',1];G.sel=0;act();if(!modal||modal.name!='Glyph Journal')bad.push('journal open');draw();
+  F.decode(F.GLY[0]);const wrong=modal.opts.find(q=>q.t!=F.GLY[0].w);wrong.f();if(G.gly.d.we)bad.push('wrong accepted');modal=null;
+  for(const g of F.GLY){F.decode(g);modal.opts.find(q=>q.t==g.w).f();modal=null}if(!G.gly.open)bad.push('not open');
+  const theo=NPCS.find(n=>n.id=='theo');delete G.talked['theo'+G.day];G.rheard={};chat(theo);if(!modal.pages.some(p=>/address/.test(p)))bad.push('theo');modal=null;
+  enter('valles',F.RD[0],F.RD[1]+1,0);G.py=F.RD[1]*T+10;triggers();if(G.zone!='ruins')bad.push('enter ruins '+G.zone);if(FM16.state().cg!='ruins')bad.push('ruins cg');modal=null;
+  if(bad.length)throw new Error(bad.join(' | '));return F.GLY.length+' glyphs found+decoded'}));
+ await t('v24: ruins - pillar order puzzle, lamp lever puzzle, Sentinel boss fight with rings/bolts/shield, rewards, mural CG',async()=>ev(()=>{const F=FM21,bad=[];G.inv=G.inv.map((s,i)=>i<4?s:null);const q=F.gl();q.open=1;q.g1=0;q.g2=0;q.boss=0;q.pil=[];q.lev=[0,0,0,0];G.time=12*60;enter('ruins',4,13,0);modal=null;CUT=null;
+  if(!solidAt(10*T+8,7*T+8))bad.push('gate1 open early');const pk=id=>Object.keys(F.PIL).find(k=>F.PIL[k]==id).split(',').map(Number);
+  F.ruinsAct(...pk('sleep'));modal=null;if(q.pil.length)bad.push('wrong order kept');for(const id of F.PORD){F.ruinsAct(...pk(id));modal=null}if(!q.g1||solidAt(10*T+8,7*T+8))bad.push('gate1');
+  F.ruinsAct(...F.LEV[1]);if(q.lev.join('')!='1110')bad.push('lever toggle '+q.lev);F.ruinsAct(...F.LEV[1]);F.ruinsAct(...F.LEV[0]);F.ruinsAct(...F.LEV[3]);modal=null;if(!q.g2||solidAt(20*T+8,8*T+8))bad.push('gate2');
+  F.ruinsAct(25,2);if(q.mural)bad.push('mural early');modal=null;
+  enter('ruins',22,8,1);F.resetBoss();G.hp=100;modal=null;menu=null;CUT=null;update();const b=F.bossRT();if(!b.awake)bad.push('awake '+JSON.stringify([!!modal,modal&&modal.name,!!menu,G.zone,G.px]));let hurtSeen=0;G.px=b.x-60;G.py=b.y;for(let i=0;i<400;i++){const h=G.hp;modal=null;menu=null;CUT=null;update();if(G.hp<h)hurtSeen++;G.hp=100;invT=0}if(!hurtSeen)bad.push('boss never hits');
+  G.inv[1]=['blade',1];G.sel=1;b.sh=50;const hp0=b.hp;G.px=b.x-20;G.py=b.y;act();if(b.hp!=hp0)bad.push('shield');b.sh=0;
+  for(let i=0;i<500&&!b.dead;i++){G.px=b.x-20;G.py=b.y;b.sh=0;modal=null;menu=null;act();swingT=0;G.hp=100;invT=0;update()}if(!b.dead||!q.boss)bad.push('boss not dead');if(FM16.state().cg!='sentinel')bad.push('boss cg');if(!cnt('acore')||!G.cos.hats.circlet)bad.push('rewards');modal=null;CUT=null;
+  F.ruinsAct(25,2);if(!q.mural||FM16.state().cg!='mural')bad.push('mural');modal=null;checkAch();if(!G.ach.sentinel)bad.push('ach');
+  if(bad.length)throw new Error(bad.join(' | '));return 'puzzles + boss ok'}));
+ await t('v24: cozy - radio stations change music + talk ticker, sprinkler spray & rain sound, seasonal window views',async()=>ev(()=>{const F=FM21,bad=[];G.time=12*60;
+  enter('home',4,2,0);G.dir=0;interact();if(!modal||!/Radio/.test(modal.name))bad.push('radio interact');const mus={};for(const k of['lofi','jazz','news','static']){modal.opts.find(q=>q.t.includes(F.STATIONS[k].n)).f();for(let i=0;i<4;i++){modal=null;menu=null;CUT=null;update()}mus[k]=AU.zone;if(AU.zone!=F.STATIONS[k].s)bad.push('music '+k+'='+AU.zone);G.dir=0;interact()}modal=null;
+  if(F.newsLines().length<3||F.staticLines().length<1)bad.push('lines');G.radio='off';update();if(/^r_/.test(AU.zone))bad.push('off');
+  const cnt0={n:0};const _n=noise;window.noise=noise=function(){cnt0.n++;};AU.sfx=1;const hadCtx=AU.ctx;if(!AU.ctx)AU.ctx={};
+  enter('farm',13,9,2);G.objs['14,10']='spr';G.time=6*60+20;for(let i=0;i<60;i++)update();noise=_n;window.noise=_n;if(!hadCtx)AU.ctx=null;if(!cnt0.n)bad.push('no sprinkler sound');if(!F.spraying())bad.push('spray');delete G.objs['14,10'];
+  enter('home',7,3,2);const sig=[];for(const s of[0,1,2,3]){G.day=1+s*7;G.time=12*60;cx.save();F.windowView(0,0,false);sig.push(cx.getImageData(2,9,12,3).data.join(','));cx.restore()}if(new Set(sig).size<4)bad.push('window seasons '+new Set(sig).size);
+  if(bad.length)throw new Error(bad.join(' | '));return 'stations '+Object.values(mus).join('/')}));
+ await t('v24: debug menu - glyph/ruins/home warps, CG + boss events, cosmetics/glyph/radio gives',async()=>ev(()=>{const el=()=>document.getElementById('dbg');G.dbgSandbox=1;const bad=[];
+  const find=(tab,l)=>{FM17.openDbg();FM17.setTab(tab);return[...el().querySelectorAll('.bd button')].find(b=>b.textContent.startsWith(l))};
+  for(const[tab,l]of[['Warp','Glyph: we'],['Warp','Canyon ruins door'],['Warp','Ruins: Sentinel arena'],['Events','CG: Ruins'],['Events','CG: Mural'],['Events','Fight the Sentinel'],['Events','Radio menu'],['Give','All hats'],['Give','Decode all'],['Give','Defeat Sentinel'],['Give','Radio: 88.1']]){if(!find(tab,l))bad.push(tab+'/'+l)}
+  find('Give','All hats').click();if(Object.keys(G.cos.hats).length<8)bad.push('all hats');find('Warp','Martian Ruins').click();if(G.zone!='ruins')bad.push('warp ruins');FM17.closeDbg();delete G.dbgSandbox;
+  if(bad.length)throw new Error(bad.join(' | '));return 'ok'}));
+ await t('v24 screenshots',async()=>{const sh=async(n,f)=>{const keep=/cg_|journal|tailor|radio_menu/.test(n);await ev(f);await new Promise(r=>setTimeout(r,150));if(!keep)await ev(()=>{modal=null;CUT=null});await new Promise(r=>setTimeout(r,300));if(!keep){await ev(()=>{modal=null});await new Promise(r=>setTimeout(r,120))}await page.screenshot({path:path.join(SHOTS,n)})};
+  await sh('fm24_hats_home.png',()=>{FM17.closeDbg();modal=null;CUT=null;G.tut=99;G.time=12*60;G.day=8;const F=FM21;for(const k in F.HATS)F.gain('hats',k);F.gain('dyes','rose');F.dye('top','rose');F.wear('miner');F.cos().loom=1;F.gain('walls','stars');F.setRoom('wall','stars');F.gain('floors','wood');F.setRoom('floor','wood');G.radio='lofi';enter('home',8,3,2)});
+  await sh('fm24_tailor.png',()=>{FM21.wear('straw');G.px=10*T+8;G.py=3*T+8;G.dir=0;FM21.tailorMenu()});
+  await sh('fm24_window_frost.png',()=>{modal=null;G.day=16;G.time=12*60;FM21.wear('beanie');FM21.setRoom('wall','leaf');FM21.setRoom('floor','check');enter('home',4,2,0)});
+  await sh('fm24_radio_news.png',()=>{G.day=8;G.radio='news';enter('home',4,2,0);for(let i=0;i<120;i++)update()});
+  await sh('fm24_sprinklers.png',()=>{G.radio='off';G.objs['14,11']='qspr';G.objs['10,11']='spr';G.time=6*60+15;FM21.wear('party');enter('farm',12,13,0);for(let i=0;i<30;i++)update()});
+  await sh('fm24_glyph_canyon.png',()=>{delete G.objs['14,11'];delete G.objs['10,11'];G.time=12*60;G.gly=null;FM21.wear('angler');const g=FM21.GLY[2];const p=FM20.nearFree('valles',g.x,g.y);enter('valles',p[0]-2,p[1]+1,1)});
+  await sh('fm24_journal.png',()=>{const q=FM21.gl();for(const g of FM21.GLY.slice(0,5))q.f[g.id]=1;for(const g of FM21.GLY.slice(0,3))q.d[g.id]=1;FM21.journal()});
+  await sh('fm24_ruins_door.png',()=>{modal=null;const q=FM21.gl();for(const g of FM21.GLY){q.f[g.id]=1;q.d[g.id]=1}q.open=1;enter('valles',FM21.RD[0],FM21.RD[1]+2,0)});
+  await sh('fm24_cg_ruins.png',()=>{FM16.showCG('ruins','The Martian Ruins',['Stairs of fitted stone lead down into a vast hall.']);modal.ch=1e4});
+  await sh('fm24_ruins_pillars.png',()=>{modal=null;const q=FM21.gl();q.g1=0;q.g2=0;q.pil=['we','sleep'];FM21.wear('circlet');enter('ruins',5,8,0)});
+  await sh('fm24_ruins_levers.png',()=>{const q=FM21.gl();q.g1=1;q.lev=[1,1,0,0];enter('ruins',15,10,0)});
+  await sh('fm24_sentinel_fight.png',()=>{const q=FM21.gl();q.g2=1;q.boss=0;FM21.resetBoss();enter('ruins',22,8,1);G.hp=100;const b=FM21.bossRT();b.awake=1;b.hp=55;for(let i=0;i<170;i++){update();G.hp=100}});
+  await sh('fm24_cg_sentinel.png',()=>{FM16.showCG('sentinel','The Sentinel Rests',['It was never angry. It was keeping a promise.']);modal.ch=1e4});
+  await sh('fm24_cg_mural.png',()=>{modal=null;FM16.showCG('mural','The Mural',['Wake when the sky is blue again.']);modal.ch=1e4});
+  await ev(()=>{modal=null;CUT=null;G.gly=null;G.cos=null;FM21.applyLook();FM21.resetBoss();G.radio='off';G.time=12*60;enter('farm',13,9,2)});return 'saved'});
  await t('v23 screenshots',async()=>{const sh=async(n,f)=>{const keep=/cg_|letter/.test(n);await ev(f);await new Promise(r=>setTimeout(r,150));if(!keep)await ev(()=>{modal=null;CUT=null;if(window.FM16&&FM16.state().cg)modal=null});await new Promise(r=>setTimeout(r,300));if(!keep){await ev(()=>{modal=null});await new Promise(r=>setTimeout(r,120))}await page.screenshot({path:path.join(SHOTS,n)})};
   await sh('fm23_npc_walk.png',()=>{G.tut=99;FM17.closeDbg();modal=null;CUT=null;G.day=9;G.time=8*60+50;placeNPCs(true);enter('city',12,13,2);G.time=9*60;lastHour=-1;for(let i=0;i<200;i++)update()});
   await sh('fm23_npc_chat.png',()=>{G.day=8;G.time=12*60+20;placeNPCs(true);enter('cafe',7,6,0);FM20.syncPairs();NCT=0;NCHAT=null;for(let i=0;i<200;i++)update();if(!NCHAT){NCHAT={p:PAIRS[0],i:0,t:40}}});
