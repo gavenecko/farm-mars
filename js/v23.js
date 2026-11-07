@@ -2,7 +2,7 @@
 (function(){
 // ---------- textures (generated detail maps, blended with 'overlay') ----------
 const TEX={},TN=['regolith','rock','metal','grass','wood'];let texReady=0;
-for(const n of TN){const im=new Image();im.onload=()=>{TEX[n]=im;if(++texReady==TN.length){for(const k in TC)delete TC[k];for(const k in BGK)delete BGK[k]}};im.src='assets/tex/'+n+'.webp?v=26'}
+for(const n of TN){const im=new Image();im.onload=()=>{TEX[n]=im;if(++texReady==TN.length){for(const k in TC)delete TC[k];for(const k in BGK)delete BGK[k]}};im.src='assets/tex/'+n+'.webp?v=26a'}
 const INZ=z=>!OUTZ(z)&&z!='farm'&&z!='city';
 function texFor(z,base){const d=base.getContext('2d').getImageData(0,0,T,T).data;let r=0,g=0,b=0,a=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];a+=d[i+3]}const n=d.length/4;r/=n;g/=n;b/=n;a/=n;if(a<200)return null;
  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx?(mx-mn)/mx:0;if(b>r+12&&b>g)return null;// water/glass/screens
@@ -108,7 +108,12 @@ const HD={on:true};
  px(g,X+3,Y+22,11,3,'#0005');px(g,X+2,Y+23,13,1,'#0003');const s=charSprite(look,dir,f,o.suit,o.swing),sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=true;g.drawImage(s,X-1,Y-2,18,27);g.imageSmoothingEnabled=sm;
  if(o.carry){const c=o.carry,b=(f&1)?1:0;ob(g,X+5,Y-6+b,6,6,c);px(g,X+6,Y-5+b,2,2,'#fff8')}}}
 {const _bg=bgCache;bgCache=function(z,m){const c=_bg(z,m);if(c&&z=='farm'&&!c._dome){c._dome=1;const g=c.getContext('2d');g.save();g.setTransform(c._s||1,0,0,c._s||1,0,0);g.strokeStyle='rgba(255,230,200,.07)';g.lineWidth=1;const X=16*T,Y=11*T;for(let i=1;i<=6;i++){g.beginPath();g.ellipse(X,Y,16*T*i/6,11*T,0,0,6.3);g.stroke()}for(let i=1;i<6;i++){g.beginPath();g.ellipse(X,Y,16*T,11*T*i/6,0,0,6.3);g.stroke()}g.restore()}return c}}
-window.FM23={domeBaked:true,hdSprite,DES,HD,HC,K:()=>window.__K||1};
+// prewarm the HD sprite cache in small idle batches so walking NPCs never build sprites mid-frame
+function prewarm(){const Q=[];const looks=()=>[PLOOK,...NPCS.map(n=>n.look)].filter(l=>l&&l.skin&&!l.small);
+ const fill=()=>{for(const L of looks())for(let d=0;d<4;d++)for(let f=0;f<4;f++){Q.push([L,d,f,0,0]);if(L===PLOOK){Q.push([L,d,f,1,0]);Q.push([L,d,f,0,1])}}};fill();
+ const step=()=>{const t=performance.now();while(Q.length&&performance.now()-t<4){const a=Q.shift();try{charSprite(...a)}catch(e){}}if(Q.length)setTimeout(step,30);else PW.done=true};setTimeout(step,200)}
+const PW={done:false};setTimeout(prewarm,300);
+window.FM23={PW,domeBaked:true,hdSprite,DES,HD,HC,K:()=>window.__K||1};
 })();
 // ---------- render pipeline: world canvas at moderate res + full-device-res text overlay ----------
 (function(){const P=CanvasRenderingContext2D.prototype,raw={};for(const n of['fillRect','drawImage','fillText','strokeText','fill','stroke','clearRect','putImageData','strokeRect','getImageData','save','restore','clip','beginPath','rect'])raw[n]=P[n];
