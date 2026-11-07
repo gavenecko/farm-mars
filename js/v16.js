@@ -2,7 +2,7 @@
 (()=>{
 // ---------- illustrated event CGs (lazy-loaded HTML overlay) ----------
 const CGI={},CGF={};let cgEl=null,cgCap=null,cgImg=null,CG=null;
-function cgLoad(k){if(CGI[k]||CGF[k])return CGI[k];const im=new Image();im.decoding='async';im.onload=()=>{im._ok=1};im.onerror=()=>{CGF[k]=1};im.src='assets/cg/'+k+'.webp?v=26a';CGI[k]=im;return im}
+function cgLoad(k){if(CGI[k]||CGF[k])return CGI[k];const im=new Image();im.decoding='async';im.onload=()=>{im._ok=1};im.onerror=()=>{CGF[k]=1};im.src='assets/cg/'+k+'.webp?v=26b';CGI[k]=im;return im}
 function cgEnsure(){if(cgEl)return;cgEl=document.createElement('div');cgEl.id='cgov';cgEl.style.cssText='position:fixed;display:none;pointer-events:none;z-index:6;overflow:hidden;background:#000;opacity:0;transition:opacity .5s';
  cgImg=document.createElement('img');cgImg.style.cssText='width:100%;height:100%;object-fit:cover;display:block';cgEl.appendChild(cgImg);
  cgCap=document.createElement('div');cgCap.style.cssText='position:absolute;left:0;right:0;bottom:0;padding:1.2% 3% 2.2%;background:linear-gradient(transparent,rgba(10,4,20,.82) 30%);color:#fff;font:600 2.6vmin/1.35 system-ui,sans-serif;text-shadow:0 1px 3px #000';cgEl.appendChild(cgCap);document.body.appendChild(cgEl)}

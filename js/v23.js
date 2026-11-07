@@ -2,7 +2,7 @@
 (function(){
 // ---------- textures (generated detail maps, blended with 'overlay') ----------
 const TEX={},TN=['regolith','rock','metal','grass','wood'];let texReady=0;
-for(const n of TN){const im=new Image();im.onload=()=>{TEX[n]=im;if(++texReady==TN.length){for(const k in TC)delete TC[k];for(const k in BGK)delete BGK[k]}};im.src='assets/tex/'+n+'.webp?v=26a'}
+for(const n of TN){const im=new Image();im.onload=()=>{TEX[n]=im;if(++texReady==TN.length){for(const k in TC)delete TC[k];for(const k in BGK)delete BGK[k]}};im.src='assets/tex/'+n+'.webp?v=26b'}
 const INZ=z=>!OUTZ(z)&&z!='farm'&&z!='city';
 function texFor(z,base){const d=base.getContext('2d').getImageData(0,0,T,T).data;let r=0,g=0,b=0,a=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];a+=d[i+3]}const n=d.length/4;r/=n;g/=n;b/=n;a/=n;if(a<200)return null;
  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx?(mx-mn)/mx:0;if(b>r+12&&b>g)return null;// water/glass/screens
@@ -133,8 +133,8 @@ window.FM23={PW,domeBaked:true,hdSprite,DES,HD,HC,K:()=>window.__K||1};
  const full=(x,y,w,h)=>{if(!(x<=0&&y<=0&&x+w>=W&&y+h>=H))return false;const m=cx.getTransform();return!m.b&&!m.c&&Math.abs(m.e)<1e-6&&Math.abs(m.f)<1e-6&&Math.abs(m.a*W-cv.width)<1e-3};
  const ok=()=>cx.globalCompositeOperation=='source-over';
  const cover=(x,y,w,h)=>{if(!TXT.on||!dirty)return;const m=curM();if(m.b||m.c)return;let x0=m.a*x+m.e,y0=m.d*y+m.f,x1=x0+m.a*w,y1=y0+m.d*h;if(x1<x0)[x0,x1]=[x1,x0];if(y1<y0)[y0,y1]=[y1,y0];let hit=false;for(const b of TB)if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0){hit=true;break}if(!hit)return;if(cx.globalAlpha*alphaOf(cx.fillStyle)<.75||!ok())return;mtx();raw.clearRect.call(tx,x,y,w,h)};
- cx.fillRect=function(x,y,w,h){if(ok()&&full(x,y,w,h)){if(typeof cx.fillStyle!='string'||alphaOf(cx.fillStyle)*cx.globalAlpha<.75){bx.globalAlpha=cx.globalAlpha;bx.fillStyle=cx.fillStyle;raw.fillRect.call(bx,0,0,W,H);bx.globalAlpha=1;pend=true;return}}flush();cover(x,y,w,h);return raw.fillRect.call(cx,x,y,w,h)};
- cx.drawImage=function(im,...a){if(im===lc&&ok()&&a.length==2&&a[0]==0&&a[1]==0){bx.globalAlpha=cx.globalAlpha;raw.drawImage.call(bx,lc,0,0);bx.globalAlpha=1;pend=true;return}flush();return raw.drawImage.call(cx,im,...a)};
+ cx.fillRect=function(x,y,w,h){if(w>=W&&h>=H&&ok()&&full(x,y,w,h)){if(typeof cx.fillStyle!='string'||alphaOf(cx.fillStyle)*cx.globalAlpha<.75){bx.globalAlpha=cx.globalAlpha;bx.fillStyle=cx.fillStyle;raw.fillRect.call(bx,0,0,W,H);bx.globalAlpha=1;pend=true;return}}if(pend)flush();if(dirty&&TB.length)cover(x,y,w,h);return raw.fillRect.call(cx,x,y,w,h)};
+ cx.drawImage=function(im,...a){if(im===lc&&ok()&&a.length==2&&a[0]==0&&a[1]==0){bx.globalAlpha=cx.globalAlpha;raw.drawImage.call(bx,lc,0,0);bx.globalAlpha=1;pend=true;return}if(pend)flush();return raw.drawImage.call(cx,im,...a)};
  const T2=(n)=>function(s,x,y,...a){flush();if(!TXT.on)return raw[n].call(cx,s,x,y,...a);mtx();tx.font=cx.font;tx.textAlign=cx.textAlign;tx.textBaseline=cx.textBaseline;tx.globalAlpha=cx.globalAlpha;tx[n=='fillText'?'fillStyle':'strokeStyle']=cx[n=='fillText'?'fillStyle':'strokeStyle'];tx.lineWidth=cx.lineWidth;dirty=true;{const m=curM(),fs=parseFloat(cx.font)||8,wd=fs*.62*String(s).length,al=cx.textAlign,lx0=al=='center'?x-wd/2:(al=='right'||al=='end')?x-wd:x,X0=m.a*lx0+m.c*y+m.e,Y0=m.b*x+m.d*(y-fs)+m.f;TB.push([X0-2*m.a,Y0-2*m.a,X0+(wd+4)*Math.abs(m.a),Y0+(fs+5)*Math.abs(m.d)])}return raw[n].call(tx,s,x,y,...a)};
  cx.fillText=T2('fillText');cx.strokeText=T2('strokeText');
  for(const n of['fill','stroke','putImageData','strokeRect'])cx[n]=function(...a){flush();return raw[n].apply(cx,a)};
