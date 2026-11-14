@@ -102,7 +102,7 @@ function view(){const o=[];const ws=window.FM15?FM15.WHO:[],ms=window.FM15?FM15.
  o.push(sec('Portraits (character x mood)'));const g=h('div',{cls:'grid'});for(const w of ws)for(const m of ms)g.append(h('figure',{},h('img',{loading:'lazy',src:'assets/portraits/'+w+'_'+m+'.webp?v=18',alt:w+' '+m}),h('figcaption',{textContent:w+' · '+m})));o.push([g]);
  o.push(sec('Sprites (front, side, back, side + spacesuit)'));const looks=[['You',PLOOK],...NPCS.map(n=>[n.n,n.look]),['Child',kidLook]];const sg=h('div',{cls:'grid'});
  for(const[nm,L]of looks){const c=h('canvas',{width:8*20,height:30});const x=c.getContext('2d');x.imageSmoothingEnabled=false;[2,1,0,3].forEach((d,i)=>{for(const s of[0,1])x.drawImage(charSprite(L,d,(tick>>3)&3,!!s,0),(i+s*4)*20,1)});c.style.width=(8*20*3)+'px';c.style.height='90px';sg.append(h('figure',{},c,h('figcaption',{textContent:nm})))}o.push([sg]);
- o.push(sec('Event art'));const cg=h('div',{cls:'cg'});for(const k in CGT)cg.append(h('div',{},h('b',{textContent:CGT[k]}),h('img',{loading:'lazy',src:'assets/cg/'+k+'.webp?v=26b'})));o.push([cg]);return o}
+ o.push(sec('Event art'));const cg=h('div',{cls:'cg'});for(const k in CGT)cg.append(h('div',{},h('b',{textContent:CGT[k]}),h('img',{loading:'lazy',src:'assets/cg/'+k+'.webp?v=27'})));o.push([cg]);return o}
 let filt='';
 function give(){const o=[sec('Money',...[1000,10000,100000].map(v=>B('+'+v+'cr',()=>{G.money+=v})),B('Stardust +50',()=>{G.dust=(G.dust||0)+50}))];
  o.push(sec('Unlock',B('Max all skills',()=>{for(const k in G.xp)G.xp[k]=2000}),B('Complete all side quests',()=>{G.sq=G.sq||{};for(const q of SQ)G.sq[q.id]='done'}),B('Fill museum',()=>{G.muse=G.muse||{};for(const i of FM10.MALL)G.muse[i]=1}),B('All achievements',()=>{for(const a of ACH)G.ach[a[0]]=G.day}),

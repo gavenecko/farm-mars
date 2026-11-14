@@ -40,11 +40,11 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   FM13.mnorm(modal);if(!modal||!FM12.HOMES.theo.home.map(s=>s.replace(/ \$[a-z]$/,'')).includes(modal.pages[0]))throw new Error('no home line');modal=null;G.hearts.theo=5;G.talked={};const h0=G.hearts.theo;talk(n);if(!modal||!modal.name.includes('Heart Event'))throw new Error('no event');modal=null;if(!(G.hearts.theo>h0))throw new Error('event hearts');
   const f=FM12.HOMES.theo.f.find(f=>f[0]=='starmap');G.px=f[1]*T+8;G.py=1*T+8;G.dir=0;interact();if(!modal||!modal.pages[0].includes('star chart'))throw new Error('read: '+(modal&&modal.pages[0]));modal=null;
   G.gifted={};const i=G.inv.findIndex(q=>!q);G.inv[i]=['crys',1];G.sel=i;G.talked={};modal=null;npcRT.theo.path=null;const hb=G.hearts.theo;G.px=npcRT.theo.x+14;G.py=npcRT.theo.y;talk(n);let go=modal&&modal.opts&&modal.opts.find(o=>o.t.startsWith('Give'));if(!go){const why=modal&&(modal.name+': '+String(modal.pages&&modal.pages[0]).slice(0,40));modal=null;G.talked={};talk(n);go=modal&&modal.opts&&modal.opts.find(o=>o.t.startsWith('Give'));if(!go)throw new Error('no give option ('+why+')')}modal=null;go.f();modal=null;const gave=!G.inv[i]||G.hearts.theo!=hb;G.inv[i]=null;if(!gave)throw new Error('gift failed');enter('city',16,14,0);return 'ok'}));
- await t('character sprites: player/NPC/kid 4 dirs x 4 frames + portraits render, outlined, no errors',async()=>ev(()=>{const looks=[PLOOK,...NPCS.map(n=>n.look),{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}];let n=0;
+ await t('character sprites: player/NPC/kid 4 dirs x 4 frames + portraits render, outlined, no errors',async()=>ev(()=>{const _ill=window.FM24&&FM24.ILL.on;if(window.FM24)FM24.ILL.on=false;const looks=[PLOOK,...NPCS.map(n=>n.look),{skin:'#e8b48a',hair:'#ff4aa8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}];let n=0;
   const c=document.createElement('canvas');c.width=24;c.height=30;const g=c.getContext('2d');for(const L of looks)for(let d=0;d<4;d++)for(let f=0;f<4;f++)for(const o of[{},{suit:1},{swing:1}]){g.clearRect(0,0,24,30);drawChar(g,4,3,L,d,f,o);n++;
    const a=g.getImageData(0,0,24,30).data;let op=0,ol=0;for(let i=0;i<a.length;i+=4){if(a[i+3]==255)op++;if(a[i+3]>200&&a[i]+a[i+1]+a[i+2]<240)ol++}if(op<80||ol<8)throw new Error('sprite '+JSON.stringify(L)+' d'+d+' f'+f+' '+op+'/'+ol)}
   const s=FM12.charSprite(NPCS[0].look,1,0),s2=FM12.charSprite(NPCS[0].look,1,1);if(s.toDataURL()==s2.toDataURL())throw new Error('walk frames identical');
-  for(const L of looks)for(const m of['','happy','love','angry','sad'])drawPortrait(cx,10,10,L,3,m,false),drawPortrait(cx,10,10,L,2,m,true);return n+' sprites, '+FM12.CC.size+' cached'}));
+  for(const L of looks)for(const m of['','happy','love','angry','sad'])drawPortrait(cx,10,10,L,3,m,false),drawPortrait(cx,10,10,L,2,m,true);if(window.FM24)FM24.ILL.on=_ill;return n+' sprites, '+FM12.CC.size+' cached'}));
  await t('dialogue box: renders framed panel, typewriter, tap finishes then advances, choices by touch',async()=>ev(()=>{const n=NPCS[0];let picked=0;say(n.n,['Hello there, this is a fairly long first line that types out. $h','Second page. $t'],[{t:'Yes',f:()=>{picked=1}},{t:'No'}],n.look);
   for(let i=0;i<4;i++)update();if(!(modal.ch>0&&modal.ch<modal.pages[0].length))throw new Error('not typing '+modal.ch);draw();
   const[x,y,w,h]=FM13.dbRect(),d=cx.getImageData(x+2,y+20,1,1).data;if(d[0]<150)throw new Error('frame not drawn '+d.join(','));
@@ -84,8 +84,7 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
  await t('v19: telescope constellation journal + chibi spacesuit sprites',async()=>ev(()=>{G.decor=G.decor||{};G.decor.scope=1;G.stars={};G.scopeDay=0;G.wx=null;G.time=21*60;G.day=5;FM16.scopeMenu();
   const o=modal.opts.find(o=>/Look/.test(o.t));if(!o)throw new Error('no look option');o.f();if(Object.keys(G.stars).length!=1)throw new Error('stars '+Object.keys(G.stars).length);FM16.scopeMenu();if(modal.opts.some(o=>/Look/.test(o.t)))throw new Error('twice a night');
   for(let i=0;i<12;i++)G.stars[i]=1;G.astro=0;G.scopeDay=0;checkAch();if(!G.ach.astro)throw new Error('astro ach');modal=null;
-  const a=charSprite(PLOOK,2,0,true),b=charSprite(PLOOK,2,0,false);if(a.width!=b.width||a.width%18||a.height!=a.width*1.5)throw new Error('suit not chibi '+a.width);const d=a.getContext('2d').getImageData(0,0,a.width,a.height).data;let hel=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>40&&d[i+3]<200&&d[i+2]>200&&d[i+1]>200)hel++;if(hel<10)throw new Error('no helmet '+hel);
-  return 'journal ok; suit sprite with helmet ('+hel+'px)'}));
+  {const _ill=window.FM24&&FM24.ILL.on;if(window.FM24)FM24.ILL.on=false;const a=charSprite(PLOOK,2,0,true),b=charSprite(PLOOK,2,0,false);if(window.FM24)FM24.ILL.on=_ill;if(a.width!=b.width||a.width%18||a.height!=a.width*1.5)throw new Error('suit not chibi '+a.width);const d=a.getContext('2d').getImageData(0,0,a.width,a.height).data;let hel=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>40&&d[i+3]<200&&d[i+2]>200&&d[i+1]>200)hel++;if(hel<10)throw new Error('no helmet '+hel);return 'journal ok; suit sprite with helmet ('+hel+'px)'}}));
  await t('v20: every door in every map is reachable by real joystick movement from spawn + each city entrance, and enters',async()=>ev(async()=>{eval(await (await fetch('tests/walk.js?v=20')).text());
   modal=null;CUT=null;menu=null;for(const n of NPCS)G.hearts[n.id]=G.hearts[n.id]||0;if(!G.pod){G.pod=1;G.blobs=[{c:'#7affc8'}];applyLayout()}const bad=[],ok=[];
   const starts={city:[[16,14],[1,10],[15,22],[16,30]],farm:[[13,9]],surf:[[31,41]],valles:[[2,17]]};G.gly=Object.assign(G.gly||{},{open:1});
@@ -349,15 +348,35 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   enter('farm',13,9,2);draw();const bg=bgCache('farm',curMap());if(!bg||bg._s!=2)bad.push('bg not 2x');
   FM23TEX.on=false;for(const k in TC)delete TC[k];const e=tileImg('farm','g',1);const f=flat(e),dd=e.getContext('2d').getImageData(0,0,32,32).data;let df=0;for(let i=0;i<dd.length;i+=4)df+=Math.abs(dd[i]-f[i]);if(df)bad.push('toggle off failed');FM23TEX.on=true;for(const k in TC)delete TC[k];for(const k in BGK)delete BGK[k];
   return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
- await t('v26: HD anime sprites match portrait designs (hair colour, signature items) for player + all NPCs, all dirs, hats & suit',async()=>ev(()=>{const bad=[];const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+ await t('v26: HD anime sprites match portrait designs (hair colour, signature items) for player + all NPCs, all dirs, hats & suit',async()=>ev(()=>{const _ill=window.FM24&&FM24.ILL.on;if(window.FM24)FM24.ILL.on=false;const bad=[];const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
   FM21.wear(null);const looks=[['you',PLOOK],...['ava','kai','zara','theo','nyx','pip','ruiz','mo','vega'].map(id=>[id,NPCS.find(q=>q.id==id).look])];
   for(const[id,L]of looks){for(let d=0;d<4;d++){const c=charSprite(L,d,d&1,0,0);if(c.width!=72)bad.push(id+' not HD')}
    const c=charSprite(L,2,0,0,0),D=c.getContext('2d').getImageData(0,0,72,40).data,[r,g,b]=hex(L.hair);let hn=0;for(let i=0;i<D.length;i+=4)if(D[i+3]>200&&Math.abs(D[i]-r)<14&&Math.abs(D[i+1]-g)<14&&Math.abs(D[i+2]-b)<14)hn++;if(hn<60)bad.push(id+' hair '+hn)}
   const sig={you:'#ffd23a',ava:'#7ad0ff',kai:'#f4f0ec',ruiz:'#2a8a5a',vega:'#7a1a3a',zara:'#ff3ad0',pip:'#d02a2a'};
   for(const id in sig){const L=id=='you'?PLOOK:NPCS.find(q=>q.id==id).look,c=charSprite(L,2,0,0,0),D=c.getContext('2d').getImageData(0,0,72,108).data,[r,g,b]=hex(sig[id]);let n=0;for(let i=0;i<D.length;i+=4)if(D[i+3]>200&&Math.abs(D[i]-r)<16&&Math.abs(D[i+1]-g)<16&&Math.abs(D[i+2]-b)<16)n++;if(n<6)bad.push(id+' signature '+n)}
   FM21.gain('hats','crown');FM21.wear('crown');const h1=charSprite(PLOOK,2,0,0,0).toDataURL();FM21.wear(null);const h0=charSprite(PLOOK,2,0,0,0).toDataURL();if(h1==h0)bad.push('hat not drawn');
-  if(charSprite(PLOOK,2,0,1,0).toDataURL()==h0)bad.push('suit same');FM23.HD.on=false;if(charSprite(PLOOK,2,0,0,0).width!=18)bad.push('HD toggle');FM23.HD.on=true;return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
+  if(charSprite(PLOOK,2,0,1,0).toDataURL()==h0)bad.push('suit same');FM23.HD.on=false;if(charSprite(PLOOK,2,0,0,0).width!=18)bad.push('HD toggle');FM23.HD.on=true;if(window.FM24)FM24.ILL.on=_ill;return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
  await t('v26: debug menu - graphics toggles + sprite/portrait gallery',async()=>ev(()=>{G.dbgSandbox=1;FM17.openDbg();FM17.setTab('View');const el=document.getElementById('dbg'),h=el.innerHTML,bad=[];for(const s of['v26: Graphics','HD sprites','Crisp text layer','Textures','World res 3x','Sprites vs portraits'])if(!h.includes(s))bad.push(s);if(!el.querySelector('canvas'))bad.push('gallery');FM17.closeDbg();return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
+
+ await t('v27: illustrated sprites load for player + 9 NPCs, 4 unique dirs, suit/hat/dye, fallback to v26, kid portrait look',async()=>ev(async()=>{const bad=[],w=ms=>new Promise(r=>setTimeout(r,ms));
+  for(let i=0;i<50&&!(FM24&&FM24.ILL.ready);i++)await w(80);
+  if(!FM24.ILL.ready)bad.push('sheets not ready');
+  FM24.ILL.on=true;FM24.CACHE.clear();FM21.wear(null);
+  const ids=['you','ava','kai','zara','theo','nyx','pip','ruiz','mo','vega'];
+  for(const id of ids){const L=id=='you'?PLOOK:NPCS.find(q=>q.id==id).look;const urls=new Set();
+   for(let d=0;d<4;d++){const c=charSprite(L,d,0,0,0);if(!c._ill)bad.push(id+' not illustrated');if(c.width!=72)bad.push(id+' size '+c.width);urls.add(c.toDataURL())}
+   if(urls.size<4)bad.push(id+' dirs not unique '+urls.size)}
+  const base=charSprite(PLOOK,2,0,0,0).toDataURL();
+  if(charSprite(PLOOK,2,0,1,0).toDataURL()==base)bad.push('suit');
+  FM21.gain('hats','crown');FM21.wear('crown');if(charSprite(PLOOK,2,0,0,0).toDataURL()==base)bad.push('hat');FM21.wear(null);
+  FM21.gain('dyes','crimson');FM21.dye('top','crimson');if(charSprite(PLOOK,2,0,0,0).toDataURL()==base)bad.push('dye');FM21.dye('top','teal');
+  FM24.ILL.on=false;if(charSprite(PLOOK,2,0,0,0)._ill)bad.push('fallback');FM24.ILL.on=true;
+  const kid={skin:'#e8b48a',hair:'#ff9ac8',style:'bob',top:'#ffd27a',pants:'#5a8ac8',acc:'#fff'};const kc=charSprite(kid,2,0,0,0);if(!kc._ill)bad.push('kid sheet');
+  const baby={skin:'#e8b48a',hair:'#1e2a5e',style:'bob',top:'#ffd27a',pants:'#5a8ac8',acc:'#fff'};if(charSprite(baby,2,0,0,0)._ill)bad.push('baby used pink kid sheet');
+  return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
+ await t('v27: debug View toggle + portrait/v26/v27 gallery',async()=>ev(()=>{G.dbgSandbox=1;FM17.openDbg();FM17.setTab('View');const el=document.getElementById('dbg'),h=el.innerHTML,bad=[];
+  for(const s of['v27: Illustrated sprites','Illustrated (v27)','Portraits · v26 · v27'])if(!h.includes(s))bad.push('missing '+s);
+  const g=FM24.gallery();if(!g||g.width<800)bad.push('gallery');FM17.closeDbg();return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
  await t('v25 screenshots',async()=>{const S=async(n,f,ms=500)=>{await ev(f);await new Promise(r=>setTimeout(r,ms));await page.screenshot({path:path.join(SHOTS,n)})};
   await S('fm25_portrait_straw.png',()=>{FM17.closeDbg();modal=null;CUT=null;G.tut=99;G.time=12*60;enter('farm',13,9,2);FM21.gain('hats','straw');FM21.wear('straw');FM21.gain('dyes','crimson');FM21.dye('top','crimson');say('You',['Straw hat weather.'],null,PLOOK)},800);
   await S('fm25_portrait_crown.png',()=>{modal=null;FM21.gain('hats','crown');FM21.wear('crown');FM21.gain('dyes','gold');FM21.dye('top','gold');say('You',['Starfall champion.'],null,PLOOK)},800);
