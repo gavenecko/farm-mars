@@ -372,11 +372,58 @@ module.exports=async({t,ev,page,path,SHOTS})=>{
   FM21.gain('dyes','crimson');FM21.dye('top','crimson');if(charSprite(PLOOK,2,0,0,0).toDataURL()==base)bad.push('dye');FM21.dye('top','teal');
   FM24.ILL.on=false;if(charSprite(PLOOK,2,0,0,0)._ill)bad.push('fallback');FM24.ILL.on=true;
   const kid={skin:'#e8b48a',hair:'#ff9ac8',style:'bob',top:'#ffd27a',pants:'#5a8ac8',acc:'#fff'};const kc=charSprite(kid,2,0,0,0);if(!kc._ill)bad.push('kid sheet');
-  const baby={skin:'#e8b48a',hair:'#1e2a5e',style:'bob',top:'#ffd27a',pants:'#5a8ac8',acc:'#fff'};if(charSprite(baby,2,0,0,0)._ill)bad.push('baby used pink kid sheet');
+  const baby={skin:'#e8b48a',hair:'#1e2a5e',style:'bob',top:'#ffd27a',pants:'#5a8ac8',acc:'#fff'};const bc=charSprite(baby,2,0,0,0);if(!bc._ill)bad.push('baby not illustrated');if(bc.toDataURL()==kc.toDataURL())bad.push('baby used untinted pink kid sheet');
   return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
  await t('v27: debug View toggle + portrait/v26/v27 gallery',async()=>ev(()=>{G.dbgSandbox=1;FM17.openDbg();FM17.setTab('View');const el=document.getElementById('dbg'),h=el.innerHTML,bad=[];
-  for(const s of['v27: Illustrated sprites','Illustrated (v27)','Portraits · v26 · v27'])if(!h.includes(s))bad.push('missing '+s);
+  for(const s of['v28: Illustrated sprites','Illustrated (v28)','Portraits · v26 · v28','Sprite size','Walk cycles'])if(!h.includes(s))bad.push('missing '+s);
   const g=FM24.gallery();if(!g||g.width<800)bad.push('gallery');FM17.closeDbg();return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
+
+ await t('v28: walk frames unique per direction, no back satchel, capless hats, pants dye, baby tint, NPC suit, sprite scale',async()=>ev(async()=>{
+  const bad=[],w=ms=>new Promise(r=>setTimeout(r,ms));
+  for(let i=0;i<50&&!(FM25&&FM25.ILL.ready);i++)await w(80);
+  if(!FM25||!FM25.ILL.ready)bad.push('v28 sheets not ready');
+  FM25.ILL.on=true;FM24.ILL.on=true;FM25.CACHE.clear();FM21.wear(null);
+  const ids=['you','ava','kai','zara','theo','nyx','pip','ruiz','mo','vega','kid'];
+  for(const id of ids){
+    const L=id=='you'?PLOOK:id=='kid'?{skin:'#e8b48a',hair:'#ff9ac8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}:NPCS.find(q=>q.id==id).look;
+    for(let d=0;d<4;d++){const urls=new Set();for(let f=0;f<4;f++){const c=charSprite(L,d,f,0,0);if(!c._ill)bad.push(id+' f'+f+' not ill');urls.add(c.toDataURL())}if(urls.size<3)bad.push(id+' d'+d+' walk '+urls.size)}
+  }
+  const brown=c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,w=c.width,h=c.height;let n=0;for(let y=h*0.58|0;y<h*0.82;y++)for(let x=w*0.45|0;x<w;x++){const i=(y*w+x)*4,r=d[i],g=d[i+1],b=d[i+2],a=d[i+3];if(a>180&&r>70&&r<160&&g<100&&b<80&&r>g+16&&r>b+25)n++}return n};
+  const bak=charSprite(PLOOK,0,0,0,0);if(brown(bak)>40)bad.push('satchel brown '+brown(bak));
+  const capPx=c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,w=c.width,h=c.height;let n=0;for(let y=0;y<h*0.36;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4,r=d[i],g=d[i+1],b=d[i+2],a=d[i+3];if(a>180&&g>r+6&&g>b-4&&g>40&&g<200)n++}return n};
+  FM21.wear(null);const cap0=capPx(charSprite(PLOOK,2,0,0,0));FM21.gain('hats','crown');FM21.wear('crown');const hatC=charSprite(PLOOK,2,0,0,0),cap1=capPx(hatC);if(cap1>cap0*0.5)bad.push('cap peeks '+cap1+'/'+cap0);FM21.wear(null);
+  PLOOK.pants='#3a3a5a';if(G.look)G.look.pants='#3a3a5a';if(G.cos)G.cos.dye_pants=null;FM25.CACHE.clear();
+  const base=charSprite(PLOOK,2,0,0,0);
+  FM21.gain('dyes','crimson');FM21.dye('pants','crimson');const dyed=charSprite(PLOOK,2,0,0,0);if(base.toDataURL()==dyed.toDataURL())bad.push('pants dye no change');
+  // pants region should have more crimson-ish pixels
+  const lowRed=c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,w=c.width,h=c.height;let n=0;for(let y=h*0.62|0;y<h*0.90;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(d[i+3]>180&&d[i]>d[i+1]+20&&d[i]>d[i+2]+20)n++}return n};
+  if(lowRed(dyed)<=lowRed(base))bad.push('pants not reddened');
+  const eyeRed=c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,w=c.width,h=c.height;let n=0;for(let y=h*0.28|0;y<h*0.50;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(d[i+3]>180&&d[i]>d[i+1]+25&&d[i]>d[i+2]+15)n++}return n};
+  FM21.dye('top','crimson');FM25.CACHE.clear();const topD=charSprite(PLOOK,2,0,0,0);if(eyeRed(topD)>eyeRed(base)+8)bad.push('eyes dyed '+eyeRed(topD)+'/'+eyeRed(base));
+  PLOOK.pants='#3a3a5a';if(G.look)G.look.pants='#3a3a5a';if(G.cos)G.cos.dye_pants=null;FM21.dye('top','teal');
+  const baby={skin:'#e8b48a',hair:'#1e2a5e',style:'bob',top:'#ffd27a',pants:'#5a8ac8',acc:'#fff'};
+  const bc=charSprite(baby,2,0,0,0),kc=charSprite({skin:'#e8b48a',hair:'#ff9ac8',style:'bob',top:'#ffd27a',pants:'#5a8ac8',acc:'#fff'},2,0,0,0);
+  if(!bc._ill)bad.push('baby not ill');if(bc.toDataURL()==kc.toDataURL())bad.push('baby==kid');
+  const ava=NPCS.find(q=>q.id=='ava').look;if(charSprite(ava,2,0,1,0).toDataURL()==charSprite(ava,2,0,0,0).toDataURL())bad.push('npc suit same');
+  const sc=FM25.SCALE.v;FM25.SCALE.v=1.45;enter('farm',13,9,2);if(!feetFree(G.px,G.py))bad.push('scale feet');enter('farm',15,1,2);if(!feetFree(G.px,G.py))bad.push('scale door');FM25.SCALE.v=sc;enter('farm',13,9,2);
+  return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
+ await t('v28: debug View size toggle + walk gallery',async()=>ev(()=>{G.dbgSandbox=1;FM17.openDbg();FM17.setTab('View');const el=document.getElementById('dbg'),h=el.innerHTML,bad=[];
+  for(const s of['v28: Illustrated sprites','Sprite size 1','Sprite size 1.25','Sprite size 1.45','Walk cycles (front)','Portraits · v26 · v28'])if(!h.includes(s))bad.push('missing '+s);
+  if(!/Sprite size 1(\.25|\.45)? ✓/.test(h)&&!h.includes('Sprite size 1 ✓'))bad.push('no size checkmark');
+  const g=FM25.gallery(),w=FM25.walkStrip();if(!g||g.width<800)bad.push('gallery');if(!w||w.height<200)bad.push('walk strip');FM17.closeDbg();return bad.join(';')||'ok'}).then(r=>{if(r!='ok')throw new Error(r)}));
+ await t('v28 screenshots',async()=>{const S=async(n,f,ms=500)=>{await ev(f);await new Promise(r=>setTimeout(r,ms));await page.screenshot({path:path.join(SHOTS,n)})};
+  await ev(()=>{FM17.closeDbg();modal=null;CUT=null;menu=null;G.tut=99;G.time=12*60;FM21.wear(null);FM24.ILL.on=true;if(FM25){FM25.ILL.on=true;FM25.CACHE.clear()}});
+  await S('fm28_walk_strip.png',()=>{const c=FM25.walkStrip();document.body.appendChild(c);c.id='fm28walk';c.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;background:#140818;z-index:99';},200);
+  await ev(()=>{const c=document.getElementById('fm28walk');if(c)c.remove()});
+  await S('fm28_dirs_grid.png',()=>{const ids=['you','ava','kai','zara','theo','nyx','pip','ruiz','mo','vega','kid'],c=document.createElement('canvas');c.width=72*4+8;c.height=ids.length*108+8;const g=c.getContext('2d');g.fillStyle='#140818';g.fillRect(0,0,c.width,c.height);
+    ids.forEach((id,i)=>{const L=id=='you'?PLOOK:id=='kid'?{skin:'#e8b48a',hair:'#ff9ac8',style:'bob',top:'#ffd27a',pants:'#5a8ac8'}:NPCS.find(q=>q.id==id).look;for(let d=0;d<4;d++){const s=charSprite(L,d,0,0,0);g.drawImage(s,4+d*72,4+i*108)}});
+    c.id='fm28grid';c.style.cssText='position:fixed;left:0;top:0;width:auto;height:100%;background:#140818;z-index:99';document.body.appendChild(c)},200);
+  await ev(()=>{const c=document.getElementById('fm28grid');if(c)c.remove()});
+  await S('fm28_hat_nocap.png',()=>{FM21.gain('hats','crown');FM21.wear('crown');FM21.dye('top','teal');FM21.dye('pants','navy');enter('farm',13,9,2);G.dir=2;G.moving=0});
+  await S('fm28_dye_pants.png',()=>{FM21.wear(null);FM21.gain('dyes','crimson');FM21.dye('top','crimson');FM21.dye('pants','crimson');enter('farm',13,9,2);G.dir=2;G.moving=0});
+  await ev(()=>{FM21.dye('top','teal');FM21.dye('pants','navy');FM21.wear(null)});
+ });
+
  await t('v25 screenshots',async()=>{const S=async(n,f,ms=500)=>{await ev(f);await new Promise(r=>setTimeout(r,ms));await page.screenshot({path:path.join(SHOTS,n)})};
   await S('fm25_portrait_straw.png',()=>{FM17.closeDbg();modal=null;CUT=null;G.tut=99;G.time=12*60;enter('farm',13,9,2);FM21.gain('hats','straw');FM21.wear('straw');FM21.gain('dyes','crimson');FM21.dye('top','crimson');say('You',['Straw hat weather.'],null,PLOOK)},800);
   await S('fm25_portrait_crown.png',()=>{modal=null;FM21.gain('hats','crown');FM21.wear('crown');FM21.gain('dyes','gold');FM21.dye('top','gold');say('You',['Starfall champion.'],null,PLOOK)},800);

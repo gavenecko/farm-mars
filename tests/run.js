@@ -59,6 +59,6 @@ function ok(c,m){if(!c)throw new Error(m)}
    return ev(async()=>{const out={};const go=async(z)=>{if(z=='mine')enterMine(4);else if(z=='rift'){FM8.enterRift(3);modal=null}else if(z=='dust'){G.wx='dust';enter('surf',31,40,2)}else enter(z,...({farm:[13,9],city:[15,12],surf:[31,40],valles:[2,18]}[z]),2);modal=null;
     for(let i=0;i<36;i++){update();draw()}const ts=[];for(let i=0;i<90;i++){const a=performance.now();update();draw();cx.getImageData(0,0,1,1);ts.push(performance.now()-a)}ts.splice(0,8);ts.sort((a,b)=>a-b);out[z]=[+(ts.reduce((a,b)=>a+b)/ts.length).toFixed(2),+ts[Math.floor(ts.length*.95)].toFixed(2)]};
     for(const z of ['farm','city','surf','valles','mine','rift','dust'])await go(z);G.wx=null;enter('farm',13,9,2);return out})};
-  let r=await measure(),bad=Object.entries(r).filter(([z,[a,p]])=>a>=16.7||p>=16.7);if(bad.length){r=await measure();bad=Object.entries(r).filter(([z,[a,p]])=>a>=16.7||p>=16.7)}
-  await c.send('Emulation.setCPUThrottlingRate',{rate:1});ok(!bad.length,'slow: '+JSON.stringify(bad));return Object.entries(r).map(([z,[a,p]])=>z+' avg '+a+' p95 '+p).join(', ')});
+  let r=await measure(),retried=0,bad=Object.entries(r).filter(([z,[a,p]])=>a>=16.7||p>=16.7);if(bad.length){retried=1;r=await measure();bad=Object.entries(r).filter(([z,[a,p]])=>a>=16.7||p>=16.7)}
+  await c.send('Emulation.setCPUThrottlingRate',{rate:1});ok(!bad.length,'slow: '+JSON.stringify(bad));return (retried?'retry; ':'first-try; ')+Object.entries(r).map(([z,[a,p]])=>z+' avg '+a+' p95 '+p).join(', ')});
  await br.close();if(srv)srv.close();const f=results.filter(r=>!r[1]).length;console.log(`\n${results.length-f}/${results.length} passed against ${base}`);process.exit(f?1:0)})();
